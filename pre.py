@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('input',
+    parser.add_argument('-i', '--input', default='./data/training.1600000.processed.noemoticon.csv',
                         help='The file to preprocess')
     parser.add_argument('-o', '--output',
                         help=('The output file to write the preprocessed data to. '
