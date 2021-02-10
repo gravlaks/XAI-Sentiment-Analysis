@@ -28,7 +28,7 @@ def preprocess(i, o):
 
     # write out if not dry-run
     if o is not None:
-        print('Done.', o)
+        print('Done.', 'Writing to', o)
         df.to_csv(o, index=False)
     else:
         print('Dry-run: not writing to disk.')
