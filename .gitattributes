@@ -1,0 +1,41 @@
+# .gitattributes
+# See http://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
+
+# default EOL behavior: use LF in repo, normalize (convert to native) during
+# checkout
+* text=auto
+
+# text files to be explicitly normalized
+*.c          text
+*.cpp        text
+*.h          text
+*.hpp        text
+*.pl         text
+*.pm         text
+*.py         text
+*.java       text
+*.sql        text
+*.ipynb      text
+*.tcl        text
+*.cfg        text
+*.html       text
+*.md         text
+*.xml        text
+*.properties text
+*.prefs      text
+.project     text
+.classpath   text
+
+# text files that will always have LF EOLs
+*.sh text eol=lf
+
+# text files that will always have CRLF EOLs
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.btm text eol=crlf
+*.ps1 text eol=crlf
+
+# binary files
+*.jar binary
+*.ott binary
+*.png binary
