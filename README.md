@@ -8,7 +8,11 @@ Explainable AI Project for sentiment analysis of tweets.
 3. Run code below in terminal
 ```
 python3.8 -m venv venv
+#Linux:
 source venv/bin/activate #must be done every session
+#Windows:
+source venv/Scripts/activate
+deactivate (to deactivate venv)
 ```
 
 ## Imported modules
