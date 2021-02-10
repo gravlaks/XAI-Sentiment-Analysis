@@ -18,7 +18,7 @@
 *.tcl        text
 *.cfg        text
 *.html       text
-*.md
+*.md        text
 *.xml        text
 *.properties text
 *.prefs      text
