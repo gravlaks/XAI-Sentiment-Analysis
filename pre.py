@@ -1,13 +1,13 @@
 #!./venv/bin/python3
 # -*- coding: utf8 -*-
 
-
 import os
 import re
 
 import pandas as pd
 from nltk import word_tokenize
 from nltk.corpus import stopwords
+from tqdm import tqdm
 
 
 def preprocess(i, o):
@@ -22,7 +22,9 @@ def preprocess(i, o):
 
     # apply preprocessing steps per row
     print('Preprocessing')
-    df['tweet'] = df['tweet'].apply(preprocess_row)
+    with tqdm(total=len(df)) as progress_bar:
+        df['tweet'] = df['tweet'].apply(
+            lambda tweet: preprocess_row(tweet, progress_bar))
 
     # write out if not dry-run
     if o is not None:
@@ -47,7 +49,7 @@ regex_punctuation_non_numeral = re.compile(
 regex_amp = re.compile(r'\&amp;')
 
 
-def preprocess_row(tweet):
+def preprocess_row(tweet, progress_bar):
     # transform to lowercase
     tweet = tweet.lower()
     # remove a bunch of things
@@ -57,13 +59,14 @@ def preprocess_row(tweet):
     tweet = re.sub(regex_punctuation_non_numeral, '', tweet)
     tweet = re.sub(regex_digit, 'D', tweet)
     tweet = re.sub(regex_amp, '&', tweet)
-    # only keeps words in hashtags
+    # only keep words in hashtags
     tweet = tweet.replace('#', ' ')
 
     # remove stopwords
     tokens = word_tokenize(tweet)
     tokens = [token for token in tokens if token not in stopword_set]
 
+    progress_bar.update(1)
     return tokens
 
 
