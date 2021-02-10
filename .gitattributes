@@ -15,6 +15,7 @@
 *.py         text
 *.java       text
 *.sql        text
+*.ipynb      text
 *.tcl        text
 *.cfg        text
 *.html       text
