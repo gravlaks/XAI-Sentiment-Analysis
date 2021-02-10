@@ -34,14 +34,18 @@ def preprocess(i, o):
 
     print('Success!')
 
+
 stopword_set = set(stopwords.words('english'))
 
 regex_user = re.compile(r'@[a-zæøåäöüß]+\d*')
 regex_cashtag = re.compile(r'\$([a-zæøåäöüß._]+|\d+\w+_\w+)')
-regex_URL = re.compile(r'(http|ftp|https)(:\/\/)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?')
+regex_URL = re.compile(
+    r'(http|ftp|https)(:\/\/)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?')
 regex_digit = re.compile(r'\d')
-regex_punctuation_non_numeral = re.compile(r'(?<!\d)[\.,<>!?:\-\^]|\&[gl]t;(?!\d)')
+regex_punctuation_non_numeral = re.compile(
+    r'(?<!\d)[\.,<>!?:\-\^]|\&[gl]t;(?!\d)')
 regex_amp = re.compile(r'\&amp;')
+
 
 def preprocess_row(tweet):
     # transform to lowercase
@@ -62,6 +66,7 @@ def preprocess_row(tweet):
 
     return tokens
 
+
 if __name__ == "__main__":
     import argparse
 
@@ -80,4 +85,3 @@ if __name__ == "__main__":
         print('No output location specified, performing a dry-run')
 
     preprocess(args.input, args.output)
-
