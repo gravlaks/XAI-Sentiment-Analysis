@@ -5,7 +5,9 @@ import os
 import re
 
 import pandas as pd
-from nltk import word_tokenize
+from nltk import pos_tag, word_tokenize
+from nltk.corpus import stopwords, wordnet
+from nltk.stem import WordNetLemmatizer
 from tqdm import tqdm
 import csv
 
@@ -74,11 +76,31 @@ def preprocess_row(tweet, progress_bar):
     tweet = tweet.replace('#', ' ')
 
     # remove stopwords
-    tokens = word_tokenize(tweet)
-    tokens = [token for token in tokens if token not in stopwords]
+    words = word_tokenize(tweet)
+    words = [lemmatize(word)
+             for word in words
+             if word not in stopwords]
 
     progress_bar.update(1)
-    return tokens
+    return words
+
+
+lemmatizer = WordNetLemmatizer()
+
+
+def lemmatize(word):
+    return lemmatizer.lemmatize(word, get_wordnet_pos(word))
+
+
+def get_wordnet_pos(word):
+    # Stolen from https://www.machinelearningplus.com/nlp/lemmatization-examples-python/
+    tag = pos_tag([word])[0][1][0].upper()
+    tag_dict = {"J": wordnet.ADJ,
+                "N": wordnet.NOUN,
+                "V": wordnet.VERB,
+                "R": wordnet.ADV}
+
+    return tag_dict.get(tag, wordnet.NOUN)
 
 
 if __name__ == "__main__":
@@ -100,4 +122,4 @@ if __name__ == "__main__":
     if not args.output:
         print('No output location specified, performing a dry-run')
 
-    preprocess(args.input, args.output)
+    preprocess(args.input, args.output, args.slice)
