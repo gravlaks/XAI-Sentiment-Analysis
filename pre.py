@@ -10,6 +10,7 @@ from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 from tqdm import tqdm
 import csv
+from json import dumps
 
 
 def preprocess(i, o, slice=None):
@@ -82,7 +83,7 @@ def preprocess_row(tweet, progress_bar):
              if word not in stopwords]
 
     progress_bar.update(1)
-    return words
+    return dumps(words)
 
 
 lemmatizer = WordNetLemmatizer()
