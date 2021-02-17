@@ -20,6 +20,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Local Application Modules
 # -----------------------------------------------------------------------------
+from parse import load_data
 
 strategy = tf.distribute.get_strategy()
 
@@ -47,7 +48,7 @@ def get_preprocessed_tweets(input_file):
     return df
 
 
-df = get_preprocessed_tweets('data/preproc_1000.csv')
+df = load_data('data/prepoc1000.csv')
 tweets = df['tweet']
 
 #df['tweet'].apply(lambda tweet: list(tweet))
