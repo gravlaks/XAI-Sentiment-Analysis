@@ -6,8 +6,8 @@ import re
 
 import pandas as pd
 from nltk import word_tokenize
-from nltk.corpus import stopwords
 from tqdm import tqdm
+import csv
 
 
 def preprocess(i, o, slice=None):
@@ -39,7 +39,16 @@ def preprocess(i, o, slice=None):
     print('Success!')
 
 
-stopword_set = set(stopwords.words('english'))
+# read in custom stopwords.txt and strip away apostrophes correctly
+stopwords = set()
+with open('data/stopwords.txt') as csvfile:
+    lines = csv.reader(csvfile, delimiter=',')
+    for row in lines:
+        for word in row:
+            if len(word) and word[-1] != "'" and word[0] != "'":
+                stopwords.add(word)
+            elif len(word):
+                stopwords.add(word[:-1][1:])
 
 regex_user = re.compile(r'@[a-zæøåäöüß]+\d*')
 regex_cashtag = re.compile(r'\$([a-zæøåäöüß._]+|\d+\w+_\w+)')
