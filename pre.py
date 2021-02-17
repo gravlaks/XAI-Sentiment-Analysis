@@ -10,10 +10,12 @@ from nltk.corpus import stopwords
 from tqdm import tqdm
 
 
-def preprocess(i, o):
+def preprocess(i, o, slice=None):
     # parse
     print('Loading', i)
     df = pd.read_csv(i, header=None)
+    if slice:
+        df = df[:slice]
 
     # drop less important columns
     print('Stripping down')
@@ -81,6 +83,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output',
                         help=('The output file to write the preprocessed data to. '
                               'Leave out to perform a dry-run that does not write to disk.'))
+    parser.add_argument('-s', '--slice',
+                        help=('Number of rows to include'))
 
     args = parser.parse_args()
 
