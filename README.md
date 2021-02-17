@@ -28,3 +28,5 @@ Import package other people have added:
 pip install -r requirements.txt
 ```
 
+## Setup project
+1. [download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
