@@ -44,7 +44,7 @@ def preprocess(i, o, slice=None):
 
 # read in custom stopwords.txt and strip away apostrophes correctly
 stopwords = set()
-with open('data/stopwords.txt') as csvfile:
+with open('stopwords.txt') as csvfile:
     lines = csv.reader(csvfile, delimiter=',')
     for row in lines:
         for word in row:
