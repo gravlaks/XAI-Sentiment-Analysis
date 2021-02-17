@@ -75,7 +75,7 @@ def preprocess_row(tweet, progress_bar):
 
     # remove stopwords
     tokens = word_tokenize(tweet)
-    tokens = [token for token in tokens if token not in stopword_set]
+    tokens = [token for token in tokens if token not in stopwords]
 
     progress_bar.update(1)
     return tokens
