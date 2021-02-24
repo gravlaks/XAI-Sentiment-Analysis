@@ -6,6 +6,7 @@ Explainable AI Project for sentiment analysis of tweets.
 
 1. pip install -r requirements.txt
 2. ./setup.py
+3. [download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
 
 ## Set up virtual environment in Linux:
 
@@ -15,7 +16,11 @@ Explainable AI Project for sentiment analysis of tweets.
 
 ```shellscript
 python3.8 -m venv venv
+#Linux:
 source venv/bin/activate #must be done every session
+#Windows:
+source venv/Scripts/activate
+deactivate (to deactivate venv)
 ```
 
 ## Imported modules
@@ -35,7 +40,7 @@ pip install -r requirements.txt
 
 ## Run Preprocessing Script
 
-The preprocessing script takes in the data set and (optionally) produces an output file  from it.
+The preprocessing script takes in the data set and (optionally) produces an output file from it.
 
 ```shellscript
 # Linux
