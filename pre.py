@@ -59,7 +59,7 @@ regex_URL = re.compile(
     r'(http|ftp|https)(:\/\/)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?')
 regex_digit = re.compile(r'\d')
 regex_punctuation_non_numeral = re.compile(
-    r'(?<!\d)[\.,<>!?:\-\^]|\&[gl]t;(?!\d)')
+    r'[\.,<>!?:;*\-\^]|\&[gl]t;(?!\d)')
 regex_amp = re.compile(r'\&amp;')
 
 
