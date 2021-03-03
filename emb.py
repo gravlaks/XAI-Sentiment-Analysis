@@ -156,12 +156,12 @@ def keras_model_test(glove, prepoc):
     split = 4000
     padding_type='post'
     trunc_type = 'post'
-    tokenized_tweets = get_tokenizer(prepoc)[1]
+    tokenizer,tokenized_tweets,df = get_tokenizer(prepoc)
     padded = pad_sequences(tokenized_tweets, maxlen=MAXLEN, padding=padding_type, truncating=trunc_type)
     training_tweets = padded[:split]
     test_tweets = padded[split:]
-    test_labels = get_tokenizer(prepoc)[2]['target'][split:]
-    training_labels = get_tokenizer(prepoc)[2]['target'][:split]
+    test_labels = df['target'][split:]
+    training_labels = df['target'][:split]
 
     with strategy.scope():    
     
@@ -176,7 +176,7 @@ def keras_model_test(glove, prepoc):
         model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
         model.summary()
         
-        num_epochs = 15
+        num_epochs = 2
         training_padded = np.array(training_tweets)
         training_labels = np.array(training_labels)
         
@@ -188,6 +188,27 @@ def keras_model_test(glove, prepoc):
                             verbose=1)
         
         print("Training Complete")
+        return model,tokenizer,df 
+
+from eli5.lime import TextExplainer
+
+def _get_sequences(tokenizer, texts):
+    seqs = tokenizer.texts_to_sequences(texts)
+    return pad_sequences(seqs, maxlen=MAXLEN, value=0)
+
+def predict_proba(model, tokenizer, prepoc):
+    seqs = _get_sequences(tokenizer, prepoc)
+    return model.predict(seqs)
+      
+    
+def test_eli5(g,p):
+    model,tokenizer,df  = keras_model_test(g, p)
+    test_tweets = df[:4000]
+    training_tweets = df[4000:]
+    te = TextExplainer(random_state=42)
+    te.fit(test_tweets, lambda p  : p[predict_proba(model, tokeniser, p)])
+    te.show_prediction()
+
 
 
 if __name__ == "__main__":
@@ -211,5 +232,6 @@ if __name__ == "__main__":
     elif(int(args.model) == 1):
         xgboost_model_test(args.glove, args.prepoc)
     else:
-        keras_model_test(args.glove, args.prepoc)
+        #keras_model_test(args.glove, args.prepoc)
+        test_eli5(args.glove, args.prepoc)
 
