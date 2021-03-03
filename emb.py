@@ -23,6 +23,8 @@ from keras.layers import Embedding
 from keras.initializers import Constant
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import eli5
+from eli5.lime import TextExplainer
 
 # Keras model test
 # -----------------------------------------------------------------------------
@@ -32,6 +34,11 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import regularizers
+from keras.models import Model, Input
+from sklearn.base import BaseEstimator, TransformerMixin
+from keras.layers import Dense, LSTM, Dropout, Embedding, SpatialDropout1D, Bidirectional, concatenate
+from keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D
+
 
 strategy = tf.distribute.get_strategy()
 
@@ -64,6 +71,7 @@ def get_embeddings_index(dat):
 
 def get_tokenizer(prepoc):
     df = load_data(prepoc)
+    df = pd.read_csv(prepoc, converters={'tweet': eval})
     tweets = df['tweet']
 
     #Tokenizer magic
@@ -118,96 +126,92 @@ def sentence_features_v2(s, embedding_matrix,emb_size):
     return M.mean(axis=0)
 
 #test out if the embeding matrix works with xgboost. Simple model. 
-def xgboost_model_test(glove, prepoc):
+
+class KerasTextClassifier(BaseEstimator, TransformerMixin):
+    '''Wrapper class for keras text classification models that takes raw text as input.'''
     
-    split = 4000
-    padding_type='post'
-    trunc_type = 'post'
-    tokenized_tweets = get_tokenizer(prepoc)[1]
-    padded = pad_sequences(tokenized_tweets, maxlen=MAXLEN, padding=padding_type, truncating=trunc_type)
-    training_tweets = padded[:split]
-    test_tweets = padded[split:]
-    test_labels = get_tokenizer(prepoc)[2]['target'][split:]
-    training_labels = get_tokenizer(prepoc)[2]['target'][:split]
+    def __init__(self,glove, prepoc, max_words=30000, input_length=100, n_classes=3, epochs=1, batch_size=32):
+        self.glove = glove
+        self.prepoc = prepoc
+        self.input_length = input_length
+        self.n_classes = n_classes
+        self.epochs = epochs
+        self.bs = batch_size
+        self.model = self._get_model()
+        self.tokenizer = Tokenizer(num_words=MAX_WORDS,
+                                   lower=True, split=' ', oov_token="UNK")
     
-    num_words,EMBEDDING_DIM, embedding_matrix=get_embedding_matrix(glove, prepoc)
-
-    x_train = np.array([sentence_features_v2(x,embedding_matrix,EMBEDDING_DIM) for x in training_tweets])
-    x_test = np.array([sentence_features_v2(x,embedding_matrix,EMBEDDING_DIM) for x in test_tweets])
-
-    # fit model no training data
-    model = XGBClassifier()
-    xgb_pars = {"min_child_weight": 50, "eta": 0.05, "max_depth": 8,
-            "subsample": 0.8, "silent" : 1, "nthread": 4,
-            "eval_metric": "mlogloss", "objective": "multi:softmax", "num_class": 2} #prøve å fikse det med for mange labels
-
-    d_train = xgb.DMatrix(x_train, label=training_labels > 0)
-    d_val = xgb.DMatrix(x_test, label=test_labels > 0)
-    watchlist = [(d_train, 'train'), (d_val, 'valid')]
-
-    bst = xgb.train(xgb_pars, d_train, 400, watchlist, early_stopping_rounds=50, verbose_eval=50)
+    def _get_model(self):
+        model = tf.keras.Sequential([
+            get_keras_embeddings_layer(self.glove, self.prepoc),
+            #tf.keras.layers.Dropout(0.5),
+            #tf.keras.layers.Bidirectional(LSTM(units=64, return_sequences=True)),
+            #tf.keras.layers.Bidirectional(LSTM(units=128)),
+            #tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+            #tf.keras.layers.Dense(100, activation='sigmoid'),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(self.n_classes, activation='softmax')
+        ])
+        model.compile(optimizer="adam",
+                      loss="categorical_crossentropy",
+                      metrics=["accuracy"])
+        print(model.summary())
+        return model
     
-    print("Training Complete")
+    def _get_sequences(self, texts):
+        seqs = self.tokenizer.texts_to_sequences(texts)
+        return pad_sequences(seqs, maxlen=self.input_length, value=0)
+    
+    
+    def fit(self, X, y):
+        '''
+        Fit the vocabulary and the model.
+        
+        :params:
+        X: list of texts.
+        y: labels.
+        '''
+        print("Fit")
+        print(X)
+        
+
+        self.tokenizer.fit_on_texts(X)
+        seqs = self._get_sequences(X)
+        print("Fit")
+        print(seqs)
+        
+        print("Fit ys")
+        print(y)
+
+        self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1, verbose = 0)
+    
+    def predict_proba(self, X, y=None):
+        
+        print("Predict proba")
+        print(X)
+        seqs = self._get_sequences(X) 
+        print("Predict proba")
+        print(seqs)
+
+        return self.model.predict(seqs)
+    
+    """
+    def predict(self, X, y=None):
+        return np.argmax(self.predict_proba(X), axis=1)
+    """
+    
+    def score(self, X, y):
+        y_pred = self.predict(X)
+        return accuracy_score(y, y_pred)
+
+
 
 
 #Test out if keras is working, simple model. 
-def keras_model_test(glove, prepoc):
 
-    split = 4000
-    padding_type='post'
-    trunc_type = 'post'
-    tokenizer,tokenized_tweets,df = get_tokenizer(prepoc)
-    padded = pad_sequences(tokenized_tweets, maxlen=MAXLEN, padding=padding_type, truncating=trunc_type)
-    training_tweets = padded[:split]
-    test_tweets = padded[split:]
-    test_labels = df['target'][split:]
-    training_labels = df['target'][:split]
 
-    with strategy.scope():    
-    
-        model = tf.keras.Sequential([
-            get_keras_embeddings_layer(glove, prepoc),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Bidirectional(LSTM(units=64, return_sequences=True)),
-            tf.keras.layers.Bidirectional(LSTM(units=128)),
-            tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-            tf.keras.layers.Dense(1, activation='sigmoid')
-        ])
-        model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
-        model.summary()
-        
-        num_epochs = 2
-        training_padded = np.array(training_tweets)
-        training_labels = np.array(training_labels)
-        
-        history = model.fit(training_padded, 
-                            training_labels, 
-                            epochs=num_epochs, 
-                            validation_data=(training_padded, training_labels),
-                            batch_size = 256,
-                            verbose=1)
-        
-        print("Training Complete")
-        return model,tokenizer,df 
 
-from eli5.lime import TextExplainer
 
-def _get_sequences(tokenizer, texts):
-    seqs = tokenizer.texts_to_sequences(texts)
-    return pad_sequences(seqs, maxlen=MAXLEN, value=0)
-
-def predict_proba(model, tokenizer, prepoc):
-    seqs = _get_sequences(tokenizer, prepoc)
-    return model.predict(seqs)
-      
-    
-def test_eli5(g,p):
-    model,tokenizer,df  = keras_model_test(g, p)
-    test_tweets = df[:4000]
-    training_tweets = df[4000:]
-    te = TextExplainer(random_state=42)
-    te.fit(test_tweets, lambda p  : p[predict_proba(model, tokeniser, p)])
-    te.show_prediction()
 
 
 
@@ -233,5 +237,51 @@ if __name__ == "__main__":
         xgboost_model_test(args.glove, args.prepoc)
     else:
         #keras_model_test(args.glove, args.prepoc)
-        test_eli5(args.glove, args.prepoc)
+        data = pd.read_csv(args.prepoc, converters={'tweet': eval})
+
+        training_data = np.array(data['tweet'][:500])
+        def mapping(n):
+            if n == 0:
+                return 0
+            if n == 2:
+                return 1
+            
+            if n == 4:
+                return 2
+        
+
+        target_data = np.array(data['target'][:500])
+        for i in range(len(target_data)):
+            target_data[i] = mapping(target_data[i])
+        #print("Target data")
+        #print(target_data)
+        target_data = tf.keras.utils.to_categorical(target_data, 3)
+
+        doc = np.array(data['tweet'][:1])
+        
+        
+
+
+
+
+        text_model = KerasTextClassifier(args.glove, args.prepoc,epochs=20, input_length=100)
+        text_model.fit(training_data, target_data)
+
+        pred = text_model.predict_proba(doc)
+        print(pred.shape)
+        
+        
+        
+       
+        
+        te = TextExplainer(random_state=42)
+        te.fit("hello there", text_model.predict_proba)
+        html = te.show_prediction().data
+        print(type(html))
+
+        with open("data/data.html", "w") as file:
+            file.write(html)
+
+
+
 
