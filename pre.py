@@ -18,7 +18,7 @@ def preprocess(i, o, slice=None):
     print('Loading', i)
     df = pd.read_csv(i, header=None)
     if slice:
-        df = df[:slice]
+        df = df.sample(n=slice)
 
     # drop less important columns
     print('Stripping down')
@@ -123,4 +123,4 @@ if __name__ == "__main__":
     if not args.output:
         print('No output location specified, performing a dry-run')
 
-    preprocess(args.input, args.output, args.slice)
+    preprocess(args.input, args.output, int(args.slice))
