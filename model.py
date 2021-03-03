@@ -14,6 +14,7 @@ embedding_matrix = np.zeros((1000, 100))
 
 
 def build_model_keras():
+    # TODO needs to pass embedding matrix and dimensions ++
     model = Sequential()
     model.add(Embedding(vocab_size, 100, weights=[
         embedding_matrix], trainable=False, name='GloVe_Embedding'))
