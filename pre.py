@@ -9,6 +9,7 @@ from nltk import pos_tag, word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 from tqdm import tqdm
+import csv
 from json import dumps
 
 
@@ -17,7 +18,7 @@ def preprocess(i, o, slice=None):
     print('Loading', i)
     df = pd.read_csv(i, header=None)
     if slice:
-        df = df[:slice]
+        df = df.sample(n=slice)
 
     # drop less important columns
     print('Stripping down')
@@ -41,7 +42,16 @@ def preprocess(i, o, slice=None):
     print('Success!')
 
 
-stopword_set = set(stopwords.words('english'))
+# read in custom stopwords.txt and strip away apostrophes correctly
+stopwords = set()
+with open('stopwords.txt') as csvfile:
+    lines = csv.reader(csvfile, delimiter=',')
+    for row in lines:
+        for word in row:
+            if len(word) and word[-1] != "'" and word[0] != "'":
+                stopwords.add(word)
+            elif len(word):
+                stopwords.add(word[:-1][1:])
 
 regex_user = re.compile(r'@[a-zæøåäöüß]+\d*')
 regex_cashtag = re.compile(r'\$([a-zæøåäöüß._]+|\d+\w+_\w+)')
@@ -49,7 +59,7 @@ regex_URL = re.compile(
     r'(http|ftp|https)(:\/\/)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?')
 regex_digit = re.compile(r'\d')
 regex_punctuation_non_numeral = re.compile(
-    r'(?<!\d)[\.,<>!?:\-\^]|\&[gl]t;(?!\d)')
+    r'[\.,<>!?:;*\-\^]|\&[gl]t;(?!\d)')
 regex_amp = re.compile(r'\&amp;')
 
 
@@ -70,7 +80,7 @@ def preprocess_row(tweet, progress_bar):
     words = word_tokenize(tweet)
     words = [lemmatize(word)
              for word in words
-             if word not in stopword_set]
+             if word not in stopwords]
 
     progress_bar.update(1)
     return dumps(words)
@@ -113,4 +123,4 @@ if __name__ == "__main__":
     if not args.output:
         print('No output location specified, performing a dry-run')
 
-    preprocess(args.input, args.output, args.slice)
+    preprocess(args.input, args.output, int(args.slice))
