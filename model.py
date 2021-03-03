@@ -1,21 +1,27 @@
+from tensorflow.keras import regularizers
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Bidirectional
 from keras.layers import Input, Embedding, Lambda, Bidirectional, LSTM, Dense, Dropout, Flatten, Activation
 from keras.models import Model
+import numpy as np
 
-
+# TODO: TEMP vars
 maxlen = 30
 vocab_size = 1000
-embedding_matrix = [[0 for _ in range(100)]]
+embedding_matrix = np.zeros((1000, 100))
 
-input_layer = Input(shape=(maxlen,), name='Input')
-embedding_layer = Embedding(vocab_size, 100, weights=[
-                            embedding_matrix], trainable=False, name='GloVe_Embedding')(input_layer)
-LSTM_layer = LSTM(128)(embedding_layer)
-dropout_layer = Dropout(0.25)(LSTM_layer)
-# We have 7 output labels, so units=7
-dense_layer_1 = Dense(units=7, activation='sigmoid')(dropout_layer)
-
-
-model = Model(inputs=[input_layer], outputs=[dense_layer_1])
+model = Sequential()
+model.add(Embedding(vocab_size, 100, weights=[
+    embedding_matrix], trainable=False, name='GloVe_Embedding'))
+model.add(LSTM(128, return_sequences=True))
+# model.add(LSTM(64, return_sequences=True))
+model.add(Dropout(0.1))
+model.add(Dense(32, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+# model.add(Dropout(0.05))
+# model.add(LSTM(16))
+model.add(Dense(1, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
 
