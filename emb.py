@@ -130,7 +130,7 @@ def sentence_features_v2(s, embedding_matrix,emb_size):
 class KerasTextClassifier(BaseEstimator, TransformerMixin):
     '''Wrapper class for keras text classification models that takes raw text as input.'''
     
-    def __init__(self,glove, prepoc, max_words=30000, input_length=100, n_classes=3, epochs=1, batch_size=32):
+    def __init__(self,glove, prepoc, max_words=30000, input_length=100, n_classes=3, epochs=10, batch_size=4000):
         self.glove = glove
         self.prepoc = prepoc
         self.input_length = input_length
@@ -142,16 +142,31 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
                                    lower=True, split=' ', oov_token="UNK")
     
     def _get_model(self):
-        model = tf.keras.Sequential([
-            get_keras_embeddings_layer(self.glove, self.prepoc),
-            #tf.keras.layers.Dropout(0.5),
-            #tf.keras.layers.Bidirectional(LSTM(units=64, return_sequences=True)),
-            #tf.keras.layers.Bidirectional(LSTM(units=128)),
-            #tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-            #tf.keras.layers.Dense(100, activation='sigmoid'),
+        emb_layer = get_keras_embeddings_layer(self.glove, self.prepoc)
+        sequential_model = tf.keras.Sequential([
+            emb_layer,
             tf.keras.layers.Flatten(),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
+            tf.keras.layers.Dense(100, activation='sigmoid'),
             tf.keras.layers.Dense(self.n_classes, activation='softmax')
         ])
+
+        inp = Input(shape=(None,), name="title"
+                )
+        embedded = emb_layer(inp)
+        lstm = tf.keras.layers.LSTM(128)(embedded)
+        flatten = tf.keras.layers.Flatten()(lstm)
+        dense = tf.keras.layers.Dense(self.n_classes, activation='sigmoid')(flatten)
+        lstm_model = tf.keras.Model(
+                inputs=inp,
+                outputs=dense
+        )
+
+
+
+        model = sequential_model
+
         model.compile(optimizer="adam",
                       loss="categorical_crossentropy",
                       metrics=["accuracy"])
@@ -182,8 +197,9 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
         
         print("Fit ys")
         print(y)
+        
 
-        self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1, verbose = 0)
+        self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1)
     
     def predict_proba(self, X, y=None):
         
@@ -236,21 +252,35 @@ if __name__ == "__main__":
     elif(int(args.model) == 1):
         xgboost_model_test(args.glove, args.prepoc)
     else:
-        #keras_model_test(args.glove, args.prepoc)
         data = pd.read_csv(args.prepoc, converters={'tweet': eval})
 
-        training_data = np.array(data['tweet'][:500])
+        data_0 = data[data['target']==0]
+        data_4 = data[data['target']==4]
+
+        count_0, count_4 = data.target.value_counts()
+        print(count_0, count_4)
+
+
+
+        split = len(data['tweet'])//2
+
+        training_data = np.array(data['tweet'][:split])
+        target_data = np.array(data['target'][:split])
+
+
+
+
         def mapping(n):
             if n == 0:
                 return 0
             if n == 2:
+                print("neutral")
                 return 1
             
             if n == 4:
                 return 2
         
 
-        target_data = np.array(data['target'][:500])
         for i in range(len(target_data)):
             target_data[i] = mapping(target_data[i])
         #print("Target data")
@@ -264,7 +294,7 @@ if __name__ == "__main__":
 
 
 
-        text_model = KerasTextClassifier(args.glove, args.prepoc,epochs=20, input_length=100)
+        text_model = KerasTextClassifier(args.glove, args.prepoc,epochs=1, input_length=100)
         text_model.fit(training_data, target_data)
 
         pred = text_model.predict_proba(doc)
@@ -275,7 +305,7 @@ if __name__ == "__main__":
        
         
         te = TextExplainer(random_state=42)
-        te.fit("hello there", text_model.predict_proba)
+        te.fit("I kill and murder. I hate you. A very violent tweet, violence damn fuck", text_model.predict_proba)
         html = te.show_prediction().data
         print(type(html))
 
