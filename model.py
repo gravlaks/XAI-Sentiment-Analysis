@@ -90,7 +90,7 @@ class KerasTextClassifier():
         print(y)
         
 
-        self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1)
+        return self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1)
     
     def predict_proba(self, X, y=None):
         
@@ -98,11 +98,8 @@ class KerasTextClassifier():
 
         return self.model.predict(seqs)
     
-    """
     def predict(self, X, y=None):
         return np.argmax(self.predict_proba(X), axis=1)
-    """
-
 
 
 def build_model_keras(prepoc, glove, tokenizer):
