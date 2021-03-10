@@ -37,7 +37,9 @@ class KerasTextClassifier():
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(64, activation='relu',
                                   kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-            tf.keras.layers.Dense(100, activation='sigmoid'),
+            tf.keras.layers.Dense(128, activation='relu',
+                                  kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+            tf.keras.layers.Dense(256, activation='sigmoid'),
             tf.keras.layers.Dense(n_classes, activation='softmax')
         ])
 
