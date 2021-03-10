@@ -12,13 +12,18 @@ from tqdm import tqdm
 import csv
 from json import dumps
 
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
 
 def preprocess(i, o, slice=None):
     # parse
     print('Loading', i)
     df = pd.read_csv(i, header=None)
     if slice:
-        df = df.sample(n=slice)
+        df = df.sample(n=int(slice))
 
     # drop less important columns
     print('Stripping down')
@@ -123,4 +128,5 @@ if __name__ == "__main__":
     if not args.output:
         print('No output location specified, performing a dry-run')
 
-    preprocess(args.input, args.output, int(args.slice))
+
+    preprocess(args.input, args.output, args.slice)
