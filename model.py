@@ -83,7 +83,7 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
         print(X)
         
 
-        self.tokenizer.fit_on_texts(X)
+        #self.tokenizer.fit_on_texts(X)
         seqs = self._get_sequences(X)
         print("Fit")
         print(seqs)
