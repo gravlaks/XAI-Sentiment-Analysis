@@ -31,6 +31,7 @@ class KerasTextClassifier():
         self.tokenizer = tokenizer
 
     def _get_model(self, emb_layer):
+        n_classes = 2
 
         sequential_model = tf.keras.Sequential([
             emb_layer,
@@ -39,7 +40,7 @@ class KerasTextClassifier():
             tf.keras.layers.Dense(64, activation='relu',
                                   kernel_regularizer=tf.keras.regularizers.l2(0.01)),
             tf.keras.layers.Dense(100, activation='sigmoid'),
-            tf.keras.layers.Dense(1, activation='softmax')
+            tf.keras.layers.Dense(n_classes, activation='softmax')
         ])
 
         inp = tf.keras.Input(shape=(None,), name="title"
@@ -48,7 +49,7 @@ class KerasTextClassifier():
         lstm = tf.keras.layers.LSTM(128)(embedded)
         flatten = tf.keras.layers.Flatten()(lstm)
         dense = tf.keras.layers.Dense(
-            1, activation='sigmoid')(flatten)
+            n_classes, activation='sigmoid')(flatten)
         lstm_model = tf.keras.Model(
             inputs=inp,
             outputs=dense
@@ -75,14 +76,8 @@ class KerasTextClassifier():
         y: labels.
         '''
 
-        #self.tokenizer.fit_on_texts(X)
         seqs = self._get_sequences(X)
-        print(seqs)
-        #print("Fit")
-        #print(seqs)
 
-        print("Fit ys")
-        print(y)
 
         return self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1)
 
