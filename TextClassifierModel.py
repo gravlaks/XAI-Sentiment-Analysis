@@ -12,45 +12,43 @@ Description:
 # -----------------------------------------------------------------------------------------
 
 import tensorflow as tf
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
-from emb import get_keras_embeddings_layer
 
 
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, glove, prepoc, tokenizer, max_words=30000, input_length=100, n_classes=3, epochs=10, batch_size=4000):
-        self.glove = glove
-        self.prepoc = prepoc
+    def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100, epochs=10, batch_size=4000):
+        print("init")
         self.input_length = input_length
-        self.n_classes = n_classes
         self.epochs = epochs
         self.bs = batch_size
-        self.model = self._get_model()
+        self.model = self._get_model(emb_layer)
         self.tokenizer = tokenizer
 
-    def _get_model(self):
+    def _get_model(self, emb_layer):
 
-        emb_layer = get_keras_embeddings_layer(self.glove, self.prepoc)
         sequential_model = tf.keras.Sequential([
             emb_layer,
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(64, activation='relu',
-                                  kernel_regularizer=regularizers.l2(0.01)),
+                                  kernel_regularizer=tf.keras.regularizers.l2(0.01)),
             tf.keras.layers.Dense(100, activation='sigmoid'),
-            tf.keras.layers.Dense(self.n_classes, activation='softmax')
+            tf.keras.layers.Dense(1, activation='softmax')
         ])
 
-        inp = Input(shape=(None,), name="title"
+        inp = tf.keras.Input(shape=(None,), name="title"
                     )
         embedded = emb_layer(inp)
         lstm = tf.keras.layers.LSTM(128)(embedded)
         flatten = tf.keras.layers.Flatten()(lstm)
         dense = tf.keras.layers.Dense(
-            self.n_classes, activation='sigmoid')(flatten)
+            1, activation='sigmoid')(flatten)
         lstm_model = tf.keras.Model(
             inputs=inp,
             outputs=dense
@@ -59,7 +57,7 @@ class KerasTextClassifier():
         model = sequential_model
 
         model.compile(optimizer="adam",
-                      loss="categorical_crossentropy",
+                      loss="binary_crossentropy",
                       metrics=["accuracy"])
         print(model.summary())
         return model
@@ -76,13 +74,12 @@ class KerasTextClassifier():
         X: list of texts.
         y: labels.
         '''
-        print("Fit")
-        print(X)
 
-        # self.tokenizer.fit_on_texts(X)
+        #self.tokenizer.fit_on_texts(X)
         seqs = self._get_sequences(X)
-        print("Fit")
         print(seqs)
+        #print("Fit")
+        #print(seqs)
 
         print("Fit ys")
         print(y)
@@ -99,7 +96,8 @@ class KerasTextClassifier():
         return np.argmax(self.predict_proba(X), axis=1)
 
 
-def build_model_keras(prepoc, glove, tokenizer):
-    model = KerasTextClassifier(glove, prepoc, epochs=1, input_length=100, tokenizer)
+def build_model_keras(tokenizer, emb_layer):
+    print("building model")
+    model = KerasTextClassifier(tokenizer, emb_layer, epochs=1, input_length=100)
 
     return model
