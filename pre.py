@@ -13,10 +13,6 @@ import csv
 from json import dumps
 
 import nltk
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
 
 def preprocess(i, o, slice=None):
     # parse
