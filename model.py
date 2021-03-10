@@ -18,7 +18,7 @@ import tensorflow as tf
 # -----------------------------------------------------------------------------------------
 from emb import get_keras_embeddings_layer
 
-class KerasTextClassifier(BaseEstimator, TransformerMixin):
+class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
     
     def __init__(self,glove, prepoc, tokenizer, max_words=30000, input_length=100, n_classes=3, epochs=10, batch_size=4000):
