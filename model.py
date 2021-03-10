@@ -1,127 +1,22 @@
+#!/bin/bash
 """
-File name: emb.py
+File name: model.py
 
-Creation Date: Mi 17 Feb 2021
+Creation Date: Wed 10 Mar 2021
 
-Description: Embedding layer
+Description:
 
 """
-
-# Instructions
-# -----------------------------------------------------------------------------
-# Run emb.py with -m, -g and -p for model choice, glover file and processed file. Glover file used is Example file used from:https://www.kaggle.com/watts2/glove6b50dtxt  
-# The second file is the preprocessed file we get from pre.py.
-# Model choices are wither 0 for keras or 1 for xgboost. 
 
 # Python Libraries
-# -----------------------------------------------------------------------------
-import numpy as np
-import pandas as pd
-from keras.utils import to_categorical
-from keras.preprocessing.text import Tokenizer
-from keras.layers import Embedding
-from keras.initializers import Constant
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-import eli5
-from eli5.lime import TextExplainer
+# -----------------------------------------------------------------------------------------
 
-# Keras model test
-# -----------------------------------------------------------------------------
-from time import time
-from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, Bidirectional
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras import regularizers
-from keras.models import Model, Input
 from sklearn.base import BaseEstimator, TransformerMixin
-from keras.layers import Dense, LSTM, Dropout, Embedding, SpatialDropout1D, Bidirectional, concatenate
-from keras.layers import GlobalAveragePooling1D, GlobalMaxPooling1D
-
-
-strategy = tf.distribute.get_strategy()
-
+import tensorflow as tf
 
 # Local Application Modules
-# -----------------------------------------------------------------------------
-from parse import load_data
-
-#var definition
-MAX_WORDS = 5000
-MAXLEN = 100
-
-
-def get_embeddings_index(dat):
-    embeddings_index = {}
-    with open(dat, 'r',encoding="utf8") as f:
-        for line in f:
-            values = line.split(' ')
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-
-            embeddings_index[word] = coefs
-    
-    print("Glove data loaded")
-    return embeddings_index
-
-def get_tokenizer(prepoc):
-    df = load_data(prepoc)
-    df = pd.read_csv(prepoc, converters={'tweet': eval})
-    tweets = df['tweet']
-
-    #Tokenizer magic
-    tokenizer = Tokenizer(num_words=MAX_WORDS)
-    tokenizer.fit_on_texts(tweets)
-    #temporary to test out the model 
-    tokenized_tweets = tokenizer.texts_to_sequences(tweets)
-    #remove this return sequence. for testing purposes. 
-    return tokenizer,tokenized_tweets,df
-
-##bread and butter of this whole operation. 
-def get_embedding_matrix(glove, prepoc):
-    #call the tokenizer
-    word_idx = get_tokenizer(prepoc)[0].word_index 
-    #Embeding bart :)
-    embeddings_index = get_embeddings_index(glove)
-
-    EMBEDDING_DIM = embeddings_index.get('a').shape[0]
-
-    num_words = min(MAX_WORDS, len(word_idx))+1
-    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
-    not_found_count = 0
-    for word, i in word_idx.items():
-        if i > MAX_WORDS:
-            continue
-        embedding_vector = embeddings_index.get(word) ## This references the loaded embeddings dictionary
-        if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
-            embedding_matrix[i] = embedding_vector
-        else:
-            not_found_count += 1
-    print(f"Words not found {not_found_count}")
-    
-    return  num_words, EMBEDDING_DIM, embedding_matrix
-
-#Keras embedding layer.
-def get_keras_embeddings_layer(glove, prepoc):
-    num_words,EMBEDDING_DIM,embedding_matrix = get_embedding_matrix(glove, prepoc)
-    MAX_SEQUENCE_LENGTH = 100
-    
-    embedding_layer = Embedding(num_words,
-                                EMBEDDING_DIM,
-                                embeddings_initializer=Constant(embedding_matrix),
-                                input_length=MAX_SEQUENCE_LENGTH,
-                                trainable=False)
-    
-    return  embedding_layer
-
-##cgboost verison. sentence_feature_v2 returns the mean of the embedding matrix. This is the only thing necessary to create the training and test data. 
-def sentence_features_v2(s, embedding_matrix,emb_size):
-    M=np.array([embedding_matrix[w] for w in s])
-    return M.mean(axis=0)
-
-#test out if the embeding matrix works with xgboost. Simple model. 
+# -----------------------------------------------------------------------------------------
+from emb import get_keras_embeddings_layer
 
 class KerasTextClassifier(BaseEstimator, TransformerMixin):
     '''Wrapper class for keras text classification models that takes raw text as input.'''
@@ -136,8 +31,10 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
         self.model = self._get_model()
         self.tokenizer = Tokenizer(num_words=MAX_WORDS,
                                    lower=True, split=' ', oov_token="UNK")
+        
     
     def _get_model(self):
+        
         emb_layer = get_keras_embeddings_layer(self.glove, self.prepoc)
         sequential_model = tf.keras.Sequential([
             emb_layer,
@@ -199,11 +96,7 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
     
     def predict_proba(self, X, y=None):
         
-        print("Predict proba")
-        print(X)
         seqs = self._get_sequences(X) 
-        print("Predict proba")
-        print(seqs)
 
         return self.model.predict(seqs)
     
@@ -215,15 +108,6 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
     def score(self, X, y):
         y_pred = self.predict(X)
         return accuracy_score(y, y_pred)
-
-
-
-
-#Test out if keras is working, simple model. 
-
-
-
-
 
 
 
