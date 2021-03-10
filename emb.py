@@ -45,8 +45,15 @@ def get_tweets(prepoc):
     return df['tweet']
 
 
-##bread and butter of this whole operation. 
 def get_embedding_matrix(glove, prepoc, tokenizer):
+    """
+    Input parameters: pretrained glove file, preprocessed tweets
+    and an unfitted tokenizer. 
+
+
+    Returns a dictionary where the indexes are the tokens of each word and
+    their value is the corresponding word vector's glove embedding vector.
+    """
     tweets = get_tweets(prepoc)
     print("got tweets")
 
