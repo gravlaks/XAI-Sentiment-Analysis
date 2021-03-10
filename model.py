@@ -11,7 +11,6 @@ Description:
 # Python Libraries
 # -----------------------------------------------------------------------------------------
 
-from sklearn.base import BaseEstimator, TransformerMixin
 import tensorflow as tf
 
 # Local Application Modules
