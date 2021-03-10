@@ -21,7 +21,7 @@ from emb import get_keras_embeddings_layer
 class KerasTextClassifier(BaseEstimator, TransformerMixin):
     '''Wrapper class for keras text classification models that takes raw text as input.'''
     
-    def __init__(self,glove, prepoc, max_words=30000, input_length=100, n_classes=3, epochs=10, batch_size=4000):
+    def __init__(self,glove, prepoc, max_words=30000, input_length=100, n_classes=3, epochs=10, batch_size=4000, tokenizer=None):
         self.glove = glove
         self.prepoc = prepoc
         self.input_length = input_length
@@ -29,8 +29,7 @@ class KerasTextClassifier(BaseEstimator, TransformerMixin):
         self.epochs = epochs
         self.bs = batch_size
         self.model = self._get_model()
-        self.tokenizer = Tokenizer(num_words=MAX_WORDS,
-                                   lower=True, split=' ', oov_token="UNK")
+        self.tokenizer = tokenizer
         
     
     def _get_model(self):
@@ -195,3 +194,12 @@ if __name__ == "__main__":
 
 
 
+maxlen = 30
+vocab_size = 1000
+embedding_matrix = np.zeros((1000, 100))
+
+
+def build_model_keras(prepoc, glove, tokenizer):
+    model = KerasTextClassifier(glove, prepoc,epochs=1, input_length=100, tokenizer)
+
+    return model
