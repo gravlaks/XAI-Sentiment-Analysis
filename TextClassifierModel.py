@@ -22,11 +22,9 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100, epochs=10, batch_size=4000):
+    def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100):
         print("init")
         self.input_length = input_length
-        self.epochs = epochs
-        self.bs = batch_size
         self.model = self._get_model(emb_layer)
         self.tokenizer = tokenizer
 
@@ -67,7 +65,7 @@ class KerasTextClassifier():
         seqs = self.tokenizer.texts_to_sequences(texts)
         return pad_sequences(seqs, maxlen=self.input_length, value=0)
 
-    def fit(self, X, y):
+    def fit(self, X, y, epochs, batch_size):
         '''
         Fit the vocabulary and the model.
 
@@ -79,7 +77,7 @@ class KerasTextClassifier():
         seqs = self._get_sequences(X)
 
 
-        return self.model.fit(seqs, y, batch_size=self.bs, epochs=self.epochs, validation_split=0.1)
+        return self.model.fit(seqs, y, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
     def predict_proba(self, X, y=None):
 
@@ -93,6 +91,6 @@ class KerasTextClassifier():
 
 def build_model_keras(tokenizer, emb_layer):
     print("building model")
-    model = KerasTextClassifier(tokenizer, emb_layer, epochs=1, input_length=100)
+    model = KerasTextClassifier(tokenizer, emb_layer)
 
     return model
