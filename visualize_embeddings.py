@@ -41,7 +41,7 @@ def find_similar_words(glove_idx, word):
 
 
 def display_pca_scatter_plot(glove):
-    words = ["king", "queen", "knight", "palace", "castle", "channel", "tv", "radio", "television", "music", "boy", "girl", "child", "teenager", "teen"]
+    words = ["king", "queen", "knight", "palace", "castle",  "tv", "radio", "television", "video", "channel", "boy", "girl", "child", "teenager", "teen"]
 
     glove_idx = get_embeddings_index(glove)
 
