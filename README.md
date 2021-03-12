@@ -76,7 +76,7 @@ Linux:
 ./pre.py --input <input data set> --output <output file>
 # If you just want some part of the dataset
 ./pre.py -i <input data set> -o <output file> -s <number of lines>
-Example
+# Example:
 ./pre.py -i data/training.1600000.processed.noemoticon.csv -o data/preprocessed-data-set.csv -s 1000
 ```
 
