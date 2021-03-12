@@ -48,7 +48,7 @@ Add a new directory named data to your project:
 ```sh
 mkdir data
 ```
-[Download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
+[Download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`  
 [Download glove](https://www.kaggle.com/watts2/glove6b50dtxt) and place in `/data`
 
 
@@ -56,15 +56,26 @@ mkdir data
 
 The preprocessing script takes in the data set and (optionally) produces an output file from it.
 
-```shellscript
-# Linux
+Windows:
+```sh
+python pre.py -i <input data set> -o <output file>
+# Same as:
+python pre.py --input <input data set> --output <output file>
+# If you just want some part of the dataset
+python pre.py -i <input data set> -o <output file> -s <number of lines>
+# Example:
+python pre.py -i data/training.1600000.processed.noemoticon.csv -o data/preprocessed-data-set.csv -s 1000
+```
 
+Linux:
+```sh
 ./pre.py -i <input data set> -o <output file>
 # Same as:
 ./pre.py --input <input data set> --output <output file>
-
-# Windows
-python pre.py -i <input data set> -o <output file>
+# If you just want some part of the dataset
+./pre.py -i <input data set> -o <output file> -s <number of lines>
+Example
+./pre.py -i data/training.1600000.processed.noemoticon.csv -o data/preprocessed-data-set.csv -s 1000
 ```
 
 ## Load Preprocessed Output File
@@ -77,6 +88,14 @@ from parse import load_data
 df = load_data('data/preprocessed-data-set.csv')
 print(df.columns)
 ```
+
+## Run in Jupyter Notebook
+```sh
+python -m ipykernel install --user --name=my-virtualenv-name
+jupyter notebook
+```
+* Open pipeline.ipynb in the jupyter tab in your web browser
+* Set kernel to my-virtualenv-name
 
 ## Installing and Adding Packages
 Installing required packages:
