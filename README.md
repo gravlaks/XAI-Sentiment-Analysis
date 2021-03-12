@@ -2,19 +2,77 @@
 
 Explainable AI Project for sentiment analysis of tweets.
 
-## Project setup
 
-1. pip install -r requirements.txt
-2. ./setup.py
-3. [download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
+## Prerequisites
+* Python3.8
+* pip
 
-## Set up virtual environment in Linux:
+## Clone and Set Up Virtual Environment
+Clone project:
+```sh
+git clone git@github.com:gravlaks/XAI-Sentiment-Analysis.git
+```
 
-1. Install Python3.8 (if not installed)
-2. Install pip (if not installed)
+Windows:
+```sh
+cd XAI-Sentiment-Analysis
+python -m venv venv
+source venv/Scripts/activate # Must be done every session
+
+```
+
+Linux:
+```sh
+cd XAI-Sentiment-Analysis
+python3.8 -m venv venv
+source venv/bin/activate # Must be done every session
+
+```
+
+Deactivate venv:
+```sh
+deactivate
+```
+
+
+## Project Setup
+
+Windows:
+```sh
+pip install -r requirements.txt
+python setup.py
+mkdir data      # Place data shown belown in the /data
+
+```
+
+Linux:
+```sh
+pip install -r requirements.txt
+./setup.py
+mkdir data      # Place data shown belown in the /data
+
+```
+
+[Download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
+
+
+## Installing and Adding Packages
+Installing required packages:
+```sh
+pip install -r requirements.txt
+```
+
+Add package:
+```sh
+# Important that venv is activated before you add a new package
+pip install <name_of_module>
+pip freeze > requirements.txt
+```
+
+
 3. Run code below in terminal
 
-```shellscript
+```sh
 python3.8 -m venv venv
 #Linux:
 source venv/bin/activate #must be done every session
