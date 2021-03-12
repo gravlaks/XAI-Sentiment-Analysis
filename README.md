@@ -7,18 +7,19 @@ Explainable AI Project for sentiment analysis of tweets.
 * Python3.8
 * pip
 
-## Clone and Set Up Virtual Environment
-Clone project:
+## Setting up the Project
+Clone the project:
 ```sh
 git clone git@github.com:gravlaks/XAI-Sentiment-Analysis.git
 ```
 
+Set up Virtual Environment
 Windows:
 ```sh
 cd XAI-Sentiment-Analysis
 python -m venv venv
 source venv/Scripts/activate # Must be done every session
-
+deactivate # If you want to deactivate venv, should be activated when working with the project
 ```
 
 Linux:
@@ -26,75 +27,30 @@ Linux:
 cd XAI-Sentiment-Analysis
 python3.8 -m venv venv
 source venv/bin/activate # Must be done every session
-
+deactivate # If you want to deactivate venv, should be activated when working with the project
 ```
 
-Deactivate venv:
-```sh
-deactivate
-```
-
-
-## Project Setup
-
+Install and setup required packages
 Windows:
 ```sh
-pip install -r requirements.txt
+pip install -r requirements.txt   # Important that venv is activated
 python setup.py
-mkdir data      # Place data shown belown in the /data
-
 ```
 
 Linux:
 ```sh
-pip install -r requirements.txt
+pip install -r requirements.txt   # Important that venv is activated
 ./setup.py
-mkdir data      # Place data shown belown in the /data
-
 ```
 
+Prepare the necessary data
+Add a new directory named data to your project:
+```sh
+mkdir data
+```
 [Download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
+[Download glove](https://www.kaggle.com/watts2/glove6b50dtxt) and place in `/data`
 
-
-## Installing and Adding Packages
-Installing required packages:
-```sh
-pip install -r requirements.txt
-```
-
-Add package:
-```sh
-# Important that venv is activated before you add a new package
-pip install <name_of_module>
-pip freeze > requirements.txt
-```
-
-
-3. Run code below in terminal
-
-```sh
-python3.8 -m venv venv
-#Linux:
-source venv/bin/activate #must be done every session
-#Windows:
-source venv/Scripts/activate
-deactivate (to deactivate venv)
-```
-
-## Imported modules
-
-Add package:
-
-```shellscript
-pip install <name_of_module>
-pip freeze > requirements.txt
-```
-
-Import package other people have added:
-
-```shellscript
-pip install -r requirements.txt
-```
 
 ## Run Preprocessing Script
 
@@ -120,4 +76,17 @@ from parse import load_data
 
 df = load_data('data/preprocessed-data-set.csv')
 print(df.columns)
+```
+
+## Installing and Adding Packages
+Installing required packages:
+```sh
+pip install -r requirements.txt
+```
+
+Add package:
+```sh
+# Important that venv is activated before you add a new package
+pip install <name_of_module>
+pip freeze > requirements.txt
 ```
