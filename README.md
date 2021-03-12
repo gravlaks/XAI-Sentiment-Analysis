@@ -8,14 +8,13 @@ Explainable AI Project for sentiment analysis of tweets.
 * pip
 
 ## Setting Up the Project
-Clone the project:
+### Clone the Project:
 ```sh
 git clone git@github.com:gravlaks/XAI-Sentiment-Analysis.git
 ```
 
 
-Set up Virtual Environment
-
+### Set Up Virtual Environment
 Windows:
 ```sh
 cd XAI-Sentiment-Analysis
@@ -32,8 +31,7 @@ source venv/bin/activate # Must be done every session
 deactivate # If you want to deactivate venv, should be activated when working with the project
 ```
 
-Install and setup required packages
-
+### Install and Set Up Required Packages
 Windows:
 ```sh
 pip install -r requirements.txt   # Important that venv is activated
@@ -46,7 +44,7 @@ pip install -r requirements.txt   # Important that venv is activated
 ./setup.py
 ```
 
-Prepare the necessary data  
+### Add the Necessary Data
 Add a new directory named data to your project:
 ```sh
 cd XAI-Sentiment-Analysis
