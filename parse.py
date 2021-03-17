@@ -8,5 +8,5 @@ import pandas as pd
 
 def load_data(path):
     df = pd.read_csv(path)
-    df['tweet'].apply(loads)
+    df['tweet'] = df['tweet'].apply(loads)
     return df
