@@ -16,32 +16,6 @@ Description:
 
         """
 
-        def mapping(n):
-            if n == 0:
-                return 0
-            if n == 4:
-                return 1
-            
-        data = pd.read_csv(args.prepoc, converters={'tweet': eval})
-
-        data_0 = data[data['target']==0]
-        data_4 = data[data['target']==4]
-
-        count_0, count_4 = data.target.value_counts()
-        print(count_0, count_4)
-
-
-
-        split = len(data['tweet'])//2
-
-        training_data = np.array(data['tweet'][:split])
-        target_data = np.array(data['target'][:split])
-        
-
-        for i in range(len(target_data)):
-            target_data[i] = mapping(target_data[i])
-        target_data = tf.keras.utils.to_categorical(target_data, 2)
-
         doc = np.array(data['tweet'][:1])
         
         

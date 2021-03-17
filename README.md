@@ -2,64 +2,80 @@
 
 Explainable AI Project for sentiment analysis of tweets.
 
-## Project setup
 
-1. pip install -r requirements.txt
-2. ./setup.py
-3. [download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`
+## Prerequisites
+* Python3.8
+* pip
 
-## Set up virtual environment in Linux:
-
-1. Install Python3.8 (if not installed)
-2. Install pip (if not installed)
-3. Run code below in terminal
-
-```shellscript
-python3.8 -m venv venv
-#Linux:
-source venv/bin/activate #must be done every session
-#Windows:
-source venv/Scripts/activate
-deactivate (to deactivate venv)
+## Setting Up the Project
+### Clone the Project:
+```sh
+git clone git@github.com:gravlaks/XAI-Sentiment-Analysis.git
 ```
 
-## Imported modules
+
+### Set Up Virtual Environment
+Windows:
+```sh
+cd XAI-Sentiment-Analysis
+python -m venv venv
+source venv/Scripts/activate # Must be done every session
+deactivate # If you want to deactivate venv, should be activated when working with the project
+```
+
+Linux:
+```sh
+cd XAI-Sentiment-Analysis
+python3.8 -m venv venv
+source venv/bin/activate # Must be done every session
+deactivate # If you want to deactivate venv, should be activated when working with the project
+```
+
+### Install and Set Up Required Packages
+```sh
+pip install -r requirements.txt   # Important that venv is activated
+python setup.py
+```
+
+
+#### Problems with NLTK
+If setup.py does not work for any reason, try:
+```
+import nltk
+nltk.download()
+```
+for a GUI where download of the packages is easier.
+
+### Add the Necessary Data
+Add a new directory named data to your project:
+```sh
+cd XAI-Sentiment-Analysis
+mkdir data
+```
+[Download dataset](https://www.kaggle.com/kazanova/sentiment140) and place in `/data`  
+[Download glove](https://www.kaggle.com/watts2/glove6b50dtxt) and place in `/data`
+
+
+
+## Run in Jupyter Notebook
+```sh
+python -m ipykernel install --user --name=venv
+jupyter notebook
+```
+* Open pipeline.ipynb in the jupyter tab in your web browser
+* Set kernel to venv
+
+
+# Future Development
+
+## Adding Packages
 
 Add package:
-
-```shellscript
+```sh
+# Important that venv is activated before you add a new package
+pip install -r requirements.txt #To ensure you have all current packages
 pip install <name_of_module>
 pip freeze > requirements.txt
 ```
 
-Import package other people have added:
 
-```shellscript
-pip install -r requirements.txt
-```
-
-## Run Preprocessing Script
-
-The preprocessing script takes in the data set and (optionally) produces an output file from it.
-
-```shellscript
-# Linux
-
-./pre.py -i <input data set> -o <output file>
-# Same as:
-./pre.py --input <input data set> --output <output file>
-
-# Windows
-python pre.py -i <input data set> -o <output file>
-```
-
-## Load Preprocessed Output File
-
-The preprocessed output file can be loaded easily by using the `load_data` function from `parse`.
-
-```python
-from parse import load_data
-
-df = load_data('data/preprocessed-data-set.csv')
-print(df.columns)
-```
