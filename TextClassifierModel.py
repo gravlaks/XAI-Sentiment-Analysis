@@ -96,6 +96,9 @@ class KerasTextClassifier():
     def predict(self, X, y=None):
         return np.argmax(self.predict_proba(X), axis=1)
 
+    def save(self, directory, overwrite=False):
+        save_model_keras(self, directory, overwrite)
+
 
 def build_model_keras(tokenizer, emb_layer):
     print("building model")
@@ -158,10 +161,10 @@ def load_model_keras(directory):
 
     return model
 
+
 def get_model_paths(directory):
     config_path = os.path.join(directory, 'config.json')
     tokenizer_path = os.path.join(directory, 'tokenizer.pickle')
     model_path = os.path.join(directory, 'keras-model')
 
     return config_path, tokenizer_path, model_path
-
