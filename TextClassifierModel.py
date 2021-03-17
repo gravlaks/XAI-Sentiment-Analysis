@@ -11,9 +11,15 @@ Description:
 # Python Libraries
 # -----------------------------------------------------------------------------------------
 
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import json
+import os
+import pickle
+from shutil import rmtree
 
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
@@ -23,10 +29,11 @@ class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
     def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100):
-        print("init")
-        self.input_length = input_length
-        self.model = self._get_model(emb_layer)
-        self.tokenizer = tokenizer
+        if tokenizer is not None and emb_layer is not None:
+            print("init")
+            self.input_length = input_length
+            self.model = self._get_model(emb_layer)
+            self.tokenizer = tokenizer
 
     def _get_model(self, emb_layer):
         n_classes = 2
@@ -44,7 +51,7 @@ class KerasTextClassifier():
         ])
 
         inp = tf.keras.Input(shape=(None,), name="title"
-                    )
+                             )
         embedded = emb_layer(inp)
         lstm = tf.keras.layers.LSTM(128)(embedded)
         flatten = tf.keras.layers.Flatten()(lstm)
@@ -78,7 +85,6 @@ class KerasTextClassifier():
 
         seqs = self._get_sequences(X)
 
-
         return self.model.fit(seqs, y, batch_size=batch_size, epochs=epochs, validation_split=0.1)
 
     def predict_proba(self, X, y=None):
@@ -96,3 +102,66 @@ def build_model_keras(tokenizer, emb_layer):
     model = KerasTextClassifier(tokenizer, emb_layer)
 
     return model
+
+
+def save_model_keras(model, directory, overwrite=False):
+    if os.path.exists(directory):
+        if overwrite:
+            print('First, removing existing model')
+            rmtree(directory)
+        else:
+            raise TypeError('Directory exists!')
+
+    print('Saving model to', directory)
+    os.makedirs(directory, exist_ok=True)
+    config_path, tokenizer_path, model_path = get_model_paths(directory)
+
+    print('Creating config file', config_path)
+    with open(config_path, 'w') as out_file:
+        json.dump({'input_length': model.input_length}, out_file)
+
+    print('Creating tokenizer file', tokenizer_path)
+    with open(tokenizer_path, 'wb') as out_file:
+        pickle.dump(model.tokenizer, out_file, pickle.HIGHEST_PROTOCOL)
+
+    print('Creating keras model file', model_path)
+    model.model.save(model_path)
+
+
+def load_model_keras(directory):
+    if not os.path.exists(directory):
+        raise TypeError('Directory does not exist!')
+    if not os.path.isdir(directory):
+        raise TypeError('Path exists but is not a directory!')
+
+    config_path, tokenizer_path, model_path = get_model_paths(directory)
+    if not os.path.isfile(config_path):
+        raise TypeError('No config file!')
+    if not os.path.isfile(tokenizer_path):
+        raise TypeError('No tokenizer file!')
+    if not os.path.exists(model_path):
+        raise TypeError('No keras model!')
+
+    print('Loading model from', directory)
+    model = KerasTextClassifier(None, None)
+
+    print('Reading config file', config_path)
+    with open(config_path, 'r') as in_file:
+        model.input_length = json.load(in_file)['input_length']
+
+    print('Reading tokenizer file', tokenizer_path)
+    with open(tokenizer_path, 'rb') as in_file:
+        model.tokenizer = pickle.load(in_file)
+
+    print('Reading keras model file', model_path)
+    model.model = keras.models.load_model(model_path)
+
+    return model
+
+def get_model_paths(directory):
+    config_path = os.path.join(directory, 'config.json')
+    tokenizer_path = os.path.join(directory, 'tokenizer.pickle')
+    model_path = os.path.join(directory, 'keras-model')
+
+    return config_path, tokenizer_path, model_path
+
