@@ -18,52 +18,58 @@ from shutil import rmtree
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
 
 
+def sequential_model(emb_layer):
+    return tf.keras.Sequential([
+        emb_layer,
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(64, activation='relu',
+                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Dense(128, activation='relu',
+                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Dense(256, activation='sigmoid'),
+        tf.keras.layers.Dense(n_classes, activation='softmax')
+    ])
+
+
+def lstm_model(emb_layer):
+    inp = tf.keras.Input(shape=(None,), name="title")
+    embedded = emb_layer(inp)
+    lstm = tf.keras.layers.LSTM(128)(embedded)
+    flatten = tf.keras.layers.Flatten()(lstm)
+    dense = tf.keras.layers.Dense(
+        n_classes, activation='sigmoid')(flatten)
+    return tf.keras.Model(
+        inputs=inp,
+        outputs=dense
+    )
+
+
+n_classes = 2
+models = {
+    'sequential': sequential_model,
+    'recurrent': lstm_model,
+}
+
+
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100):
+    def __init__(self, tokenizer, emb_layer, model_type='sequential', max_words=30000, input_length=100):
         if tokenizer is not None and emb_layer is not None:
             print("init")
             self.input_length = input_length
-            self.model = self._get_model(emb_layer)
+            self.model = self._get_model(model_type, emb_layer)
             self.tokenizer = tokenizer
 
-    def _get_model(self, emb_layer):
-        n_classes = 2
-
-        sequential_model = tf.keras.Sequential([
-            emb_layer,
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dropout(0.5),
-            tf.keras.layers.Dense(64, activation='relu',
-                                  kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-            tf.keras.layers.Dense(128, activation='relu',
-                                  kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-            tf.keras.layers.Dense(256, activation='sigmoid'),
-            tf.keras.layers.Dense(n_classes, activation='softmax')
-        ])
-
-        inp = tf.keras.Input(shape=(None,), name="title"
-                             )
-        embedded = emb_layer(inp)
-        lstm = tf.keras.layers.LSTM(128)(embedded)
-        flatten = tf.keras.layers.Flatten()(lstm)
-        dense = tf.keras.layers.Dense(
-            n_classes, activation='sigmoid')(flatten)
-        lstm_model = tf.keras.Model(
-            inputs=inp,
-            outputs=dense
-        )
-
-        model = sequential_model
-
+    def _get_model(self, model_type, emb_layer):
+        model = models[model_type](emb_layer)
         model.compile(optimizer="adam",
                       loss="binary_crossentropy",
                       metrics=["accuracy"])
@@ -100,9 +106,9 @@ class KerasTextClassifier():
         save_model_keras(self, directory, overwrite)
 
 
-def build_model_keras(tokenizer, emb_layer):
+def build_model_keras(tokenizer, emb_layer, model_type='sequential'):
     print("building model")
-    model = KerasTextClassifier(tokenizer, emb_layer)
+    model = KerasTextClassifier(tokenizer, emb_layer, model_type=model_type)
 
     return model
 
@@ -157,7 +163,7 @@ def load_model_keras(directory):
         model.tokenizer = pickle.load(in_file)
 
     print('Reading keras model file', model_path)
-    model.model = keras.models.load_model(model_path)
+    model.model = tf.keras.models.load_model(model_path)
 
     return model
 
