@@ -20,6 +20,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import numpy as np
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
@@ -74,18 +75,24 @@ class KerasTextClassifier():
         seqs = self.tokenizer.texts_to_sequences(texts)
         return pad_sequences(seqs, maxlen=self.input_length, value=0)
 
-    def fit(self, X, y, epochs, batch_size):
+    def fit(self, X_train, y_train, validation_data, epochs, batch_size, verbose):
         '''
         Fit the vocabulary and the model.
 
         :params:
-        X: list of texts.
+        X: list of list of words.
         y: labels.
         '''
 
-        seqs = self._get_sequences(X)
+        seqs = self._get_sequences(X_train)
+        seqs_val = self._get_sequences(validation_data[0])
 
-        return self.model.fit(seqs, y, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+        # print(seqs[0])
+        # print(type(seqs), type(seqs[0]))
+
+        # seqs = np.array([list(x) for x in seqs])
+
+        return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]), batch_size=batch_size, epochs=epochs, verbose=verbose)
 
     def predict_proba(self, X, y=None):
 
