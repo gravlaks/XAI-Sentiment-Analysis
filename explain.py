@@ -9,40 +9,20 @@ import pandas as pd
 import tensorflow as tf
 from eli5.lime import TextExplainer
 from keras.preprocessing.text import Tokenizer
+from sklearn.model_selection import train_test_split
 
-from emb import get_keras_embeddings_layer
 from parse import load_data
-from TextClassifierModel import build_model_keras
+from TextClassifierModel import create_classifier
 
 
-def load_training_data(model, data):
-    def mapping(n):
-        if n == 0:
-            return 0
-        if n == 4:
-            return 1
+# Based on https://xkcd.com/221/
+def generate_random_seed():
+    # Chosen by three fair dice rolls.
+    # Guaranteed to be random.
+    return 456
 
-    data_0 = data[data['target'] == 0]
-    data_4 = data[data['target'] == 4]
 
-    count_0, count_4 = data.target.value_counts()
-    print(count_0, count_4)
-
-    split = len(data['tweet'])//2
-
-    training_data = np.array(data['tweet'][:split])
-    training_target = np.array(data['target'][:split])
-    test_data = np.array(data['tweet'][split:])
-    test_target = np.array(data['target'][split:])
-
-    for i in range(len(training_target)):
-        training_target[i] = mapping(training_target[i])
-    for i in range(len(test_target)):
-        test_target[i] = mapping(test_target[i])
-    training_target = tf.keras.utils.to_categorical(training_target, 2)
-    test_target = tf.keras.utils.to_categorical(test_target, 2)
-
-    return training_data, training_target, test_data, test_target
+RANDOM_SEED = generate_random_seed()
 
 
 def main(args):
@@ -53,20 +33,29 @@ def main(args):
     print('Loading data')
     data = load_data(in_file)
 
-    print('Creating tokenizer, embedding, model')
+    print('Creating tokenizer')
     tokenizer = Tokenizer(num_words=5000, lower=True,
                           split=' ', oov_token="UNK")
-    emb_layer = get_keras_embeddings_layer(
-        in_glove, in_file, tokenizer)
-    model = build_model_keras(tokenizer, emb_layer, model_type)
+    print('Creating model')
+    model = create_classifier(in_glove, data, model_type)
 
     print('Loading training data')
-    training_data, training_target, _, _ = load_training_data(
-        model, data
-    )
+    data = load_data(in_file)
+    X = data['tweet']
+    y = data['target']
+    
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=RANDOM_SEED)
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=RANDOM_SEED)
+
+    y_train = tf.keras.utils.to_categorical(y_train, 2)
+    y_test = tf.keras.utils.to_categorical(y_test, 2)
+    y_val = tf.keras.utils.to_categorical(y_val, 2)
 
     print('Fitting model')
-    model.fit(training_data, training_target, epochs=40, batch_size=30)
+    model.fit(X_train, y_train, validation_data=(
+        X_val, y_val), batch_size=60, epochs=30, verbose=1)
 
     print('Explaining')
     te = TextExplainer(random_state=42)
@@ -96,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--glove', default='./data/glove.6B.50d.txt',
                         help='The glove file')
     parser.add_argument('-t', '--type', default='sequential',
-                        help='Model type, can be either sequential or recurrent')
+                        help='Model type, can be either "sequential" or "recurrent"')
     args = parser.parse_args()
 
     main(args)
