@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(model, X_test, y_test, verbose=False):
     # The labels here assume we use accuracy for our model
-    score = model.evaluate(X_test, y_test, verbose=True)
+    score = model.evaluate(X_test, y_test, verbose=verbose)
     print('Accuracy', score[1])
 
 

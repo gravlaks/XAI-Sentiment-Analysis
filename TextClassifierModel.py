@@ -87,14 +87,16 @@ class KerasTextClassifier():
 
         return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]), batch_size=batch_size, epochs=epochs, verbose=verbose)
 
-    def predict_proba(self, X, y=None):
+    def predict_proba(self, X, y=None, verbose=False):
 
         seqs = self._get_sequences(X)
 
-        return self.model.predict(seqs)
+        # return self.model.predict(seqs)
+        return self.model.evaluate(seqs, y, verbose=verbose)
 
-    def predict(self, X, y=None):
-        return np.argmax(self.predict_proba(X), axis=1)
+    def evaluate(self, X, y=None, verbose=False):
+        # return np.argmax(self.predict_proba(X), axis=1)
+        return self.predict_proba(X, y, verbose=verbose)
 
 
 def build_model_keras(tokenizer, emb_layer):
