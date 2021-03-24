@@ -138,7 +138,8 @@ def create_classifier(glove_file, data, model_type):
 
 def load_classifier(model_path):
 
-    text_classifier_path = './classifiers/' + model_path.split("/")[-1] + ".pkl"
+    text_classifier_path = ('./classifiers/'
+                            + model_path.split("/")[-1] + ".pkl")
     if not os.path.isfile(text_classifier_path):
         raise Exception("No text classifier object, create new model first")
     else:
@@ -161,7 +162,8 @@ def save_classifier(text_classifier, model_path):
     text_classifier.model = None
 
     # Pickle instance
-    text_classifier_path = './classifiers/' + model_path.split("/")[-1] + ".pkl"
+    text_classifier_path = ('./classifiers/'
+                            + model_path.split("/")[-1] + ".pkl")
     if not os.path.isdir('./classifiers'):
         os.mkdir('./classifiers')
     with open(text_classifier_path, 'wb') as out_file:
