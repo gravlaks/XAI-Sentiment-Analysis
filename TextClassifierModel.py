@@ -69,6 +69,8 @@ class KerasTextClassifier():
             self.tokenizer = tokenizer
 
     def _get_model(self, model_type, emb_layer):
+        if model_type not in models:
+            print(model_type, 'is not a valid model type. Possible values are:', ', '.join(models.keys()))
         model = models[model_type](emb_layer)
         model.compile(optimizer="adam",
                       loss="binary_crossentropy",
