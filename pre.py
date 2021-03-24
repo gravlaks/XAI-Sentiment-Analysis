@@ -14,6 +14,7 @@ from json import dumps
 
 import nltk
 
+
 def preprocess(i, o, slice=None):
     # parse
     print('Loading', i)
@@ -31,6 +32,9 @@ def preprocess(i, o, slice=None):
     with tqdm(total=len(df)) as progress_bar:
         df['tweet'] = df['tweet'].apply(
             lambda tweet: preprocess_row(tweet, progress_bar))
+
+    # Convert target 0->0 and 4->1
+    df['target'] = df['target'].apply(target_mapping)
 
     # write out if not dry-run
     if o is not None:
@@ -60,7 +64,7 @@ regex_URL = re.compile(
     r'(http|ftp|https)(:\/\/)([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?')
 regex_digit = re.compile(r'\d')
 regex_punctuation_non_numeral = re.compile(
-    r'[\.,<>!?:;*\-\^]|\&[gl]t;(?!\d)')
+    r'[\.,<>!?:;*\-\^\']|\&[gl]t;(?!\d)')
 regex_amp = re.compile(r'\&amp;')
 
 
@@ -105,6 +109,12 @@ def get_wordnet_pos(word):
     return tag_dict.get(tag, wordnet.NOUN)
 
 
+def target_mapping(n):
+    if n == 4:
+        return 1
+    return n
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -123,6 +133,5 @@ if __name__ == "__main__":
 
     if not args.output:
         print('No output location specified, performing a dry-run')
-
 
     preprocess(args.input, args.output, args.slice)
