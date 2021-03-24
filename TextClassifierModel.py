@@ -44,7 +44,7 @@ def lstm_model(emb_layer):
     lstm = tf.keras.layers.LSTM(128)(embedded)
     flatten = tf.keras.layers.Flatten()(lstm)
     dense = tf.keras.layers.Dense(
-        n_classes, activation='sigmoid')(flatten)
+        n_classes, activation='softmax')(flatten)
     return tf.keras.Model(
         inputs=inp,
         outputs=dense
