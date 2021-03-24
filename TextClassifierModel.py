@@ -120,18 +120,16 @@ class KerasTextClassifier():
         seqs = self._get_sequences(X)
         return self.model.evaluate(seqs, y, verbose=verbose)
 
-    def save(self, directory, overwrite=False):
-        save_classifier(self, directory, overwrite)
 
 
-def create_classifier(glove_file, data, model_type):
+
+def new_classifier(glove_file, data, model_type):
 
     text_classifier = KerasTextClassifier()
 
     tokenizer = text_classifier.tokenizer
     emb_layer = get_keras_embedding_layer(glove_file, data['tweet'], tokenizer)
     text_classifier.init_model(emb_layer, model_type)
-    model_path = './models/untrained'
 
     return text_classifier
 
@@ -147,7 +145,9 @@ def load_classifier(model_path):
             text_classifier = pickle.load(in_file)
 
     text_classifier.model = tf.keras.models.load_model(model_path)
-    text_classifier.model.layers[0].trainable = False
+    for layer in text_classifier.model.layers:
+        if isinstance(layer, keras.layers.Embedding):
+            layer.trainable = False
 
     return text_classifier
 
@@ -172,3 +172,6 @@ def save_classifier(text_classifier, model_path):
 
     # Restore old model object on instance
     text_classifier.model = model_cache
+    for layer in text_classifier.model.layers:
+        if isinstance(layer, keras.layers.Embedding):
+            layer.trainable = False
