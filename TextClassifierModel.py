@@ -20,7 +20,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-import numpy as np
+from keras.preprocessing.text import Tokenizer
+from emb import get_keras_embedding_layer
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
@@ -29,14 +30,14 @@ import numpy as np
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, tokenizer, emb_layer, max_words=30000, input_length=100):
-        if tokenizer is not None and emb_layer is not None:
-            print("init")
-            self.input_length = input_length
-            self.model = self._get_model(emb_layer)
-            self.tokenizer = tokenizer
+    def __init__(self, max_words=30000, input_length=100):
+        EMB_MAX_WORDS = 5000
 
-    def _get_model(self, emb_layer):
+        self.tokenizer = Tokenizer(num_words=EMB_MAX_WORDS, lower=False, split=' ', oov_token="UNK")
+
+        self.input_length = input_length
+
+    def get_model(self, emb_layer):
         n_classes = 2
 
         sequential_model = tf.keras.Sequential([
@@ -138,40 +139,44 @@ def save_model_keras(model, directory, overwrite=False):
     model.model.save(model_path)
 
 
-def load_model_keras(directory):
-    if not os.path.exists(directory):
-        raise TypeError('Directory does not exist!')
-    if not os.path.isdir(directory):
-        raise TypeError('Path exists but is not a directory!')
+def load_classifier(model_path=None, glove_file = None, data=None):
 
-    config_path, tokenizer_path, model_path = get_model_paths(directory)
-    if not os.path.isfile(config_path):
-        raise TypeError('No config file!')
-    if not os.path.isfile(tokenizer_path):
-        raise TypeError('No tokenizer file!')
-    if not os.path.exists(model_path):
-        raise TypeError('No keras model!')
+    text_classifier_path = 'models/text_classifier.pkl'
+    if not os.path.isfile(text_classifier_path):
+        text_classifier = KerasTextClassifier()
 
-    print('Loading model from', directory)
-    model = KerasTextClassifier(None, None)
+        #Save empty text classifier
+        #with open(text_classifier_path, 'wb') as out_file:
+            #pickle.dump(text_classifier, out_file, pickle.HIGHEST_PROTOCOL)
 
-    print('Reading config file', config_path)
-    with open(config_path, 'r') as in_file:
-        model.input_length = json.load(in_file)['input_length']
-
-    print('Reading tokenizer file', tokenizer_path)
-    with open(tokenizer_path, 'rb') as in_file:
-        model.tokenizer = pickle.load(in_file)
-
-    print('Reading keras model file', model_path)
-    model.model = keras.models.load_model(model_path)
-
-    return model
+    else:
+        with open(text_classifier_path, 'rb') as in_file:
+            text_classifier = pickle.load(in_file)
 
 
-def get_model_paths(directory):
-    config_path = os.path.join(directory, 'config.json')
-    tokenizer_path = os.path.join(directory, 'tokenizer.pickle')
-    model_path = os.path.join(directory, 'keras-model')
+    if model_path is None:
+        tokenizer = text_classifier.tokenizer
+        emb_layer = get_keras_embedding_layer(glove_file, data['tweet'], tokenizer)
+        text_classifier.model = text_classifier.get_model(emb_layer)
+        model_path = 'models/untrained'
+        #tf.keras.models.save_model(text_classifier.model, model_path)
+    else: 
+        text_classifier.model = tf.keras.models.load_model(model_path)
+        text_classifier.model.layers[0].trainable=False
+    
+    save_classifier(text_classifier, model_path)
+    return text_classifier
 
-    return config_path, tokenizer_path, model_path
+def save_classifier(text_classifier, model_path):
+    
+    tf.keras.models.save_model(text_classifier.model, model_path)
+    
+    text_classifier.model = None
+
+    text_classifier_path = 'models/text_classifier.pkl'
+    with open(text_classifier_path, 'wb') as out_file:
+        pickle.dump(text_classifier, out_file, pickle.HIGHEST_PROTOCOL)
+
+    text_classifier.model = tf.keras.models.load_model(model_path)
+
+
