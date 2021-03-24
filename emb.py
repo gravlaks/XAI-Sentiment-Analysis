@@ -23,29 +23,31 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Local Application Modules
 # -----------------------------------------------------------------------------
-from parse import load_data
+# TODO: cleanup
+# from parse import load_data
 
 
 def get_embeddings_index(dat):
     embeddings_index = {}
-    with open(dat, 'r',encoding="utf8") as f:
+    with open(dat, 'r', encoding="utf8") as f:
         for line in f:
             values = line.split(' ')
             word = values[0]
             coefs = np.asarray(values[1:], dtype='float32')
 
             embeddings_index[word] = coefs
-    
+
     print("Glove data loaded")
     return embeddings_index
 
-def get_tweets(prepoc):
-    df = load_data(prepoc)
-    df = pd.read_csv(prepoc, converters={'tweet': eval})
-    return df['tweet']
+# TODO: cleanup
+# def get_tweets(prepoc):
+#     df = load_data(prepoc)
+#     # df = pd.read_csv(prepoc, converters={'tweet': eval})
+#     return df['tweet']
 
 
-def get_embedding_matrix(glove, prepoc, tokenizer):
+def get_embedding_matrix(glove, tweets, tokenizer):
     """
     Input parameters: pretrained glove file, preprocessed tweets
     and an unfitted tokenizer. 
@@ -54,36 +56,41 @@ def get_embedding_matrix(glove, prepoc, tokenizer):
     Returns a dictionary where the indexes are the tokens of each word and
     their value is the corresponding word vector's glove embedding vector.
     """
-    tweets = get_tweets(prepoc)
-    print("got tweets")
+    # TODO: cleanup
+    # tweets = get_tweets(prepoc)
+    # print("got tweets")
 
     embeddings_index = get_embeddings_index(glove)
     EMBEDDING_DIM = embeddings_index.get('a').shape[0]
 
-
     #tokenizer.num_words = MAX_WORDS
     tokenizer.fit_on_texts(tweets)
-    word_idx = tokenizer.word_index 
+    word_idx = tokenizer.word_index
 
     num_words = len(word_idx)+1
     embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
     not_found_count = 0
     for word, i in word_idx.items():
-        embedding_vector = embeddings_index.get(word) ## This references the loaded embeddings dictionary
+        # This references the loaded embeddings dictionary
+        embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
         else:
             not_found_count += 1
     print(f"Words not found {not_found_count}")
-    
-    return  embedding_matrix
 
-#Keras embedding layer.
-def get_keras_embeddings_layer(glove_file, prepoc_file, tokenizer):
-    emb_matrix= get_embedding_matrix(glove_file, prepoc_file, tokenizer)
+    return embedding_matrix
+
+# Keras embedding layer.
+
+
+def get_keras_embedding_layer(glove_file, tweets, tokenizer):
+    emb_matrix = get_embedding_matrix(glove_file, tweets, tokenizer)
+
+    # TODO this is probably overkill, find average and max length in our vocab then set something shorter
     MAX_SEQUENCE_LENGTH = 100
-    
+
     emb_dim = len(emb_matrix[1])
     num_words = len(emb_matrix)
     embedding_layer = Embedding(num_words,
@@ -91,13 +98,12 @@ def get_keras_embeddings_layer(glove_file, prepoc_file, tokenizer):
                                 embeddings_initializer=Constant(emb_matrix),
                                 input_length=MAX_SEQUENCE_LENGTH,
                                 trainable=False)
-    
-    return  embedding_layer
 
+    return embedding_layer
 
 
 if __name__ == "__main__":
-    
+
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -115,11 +121,6 @@ if __name__ == "__main__":
     else:
 
         tokenizer = Tokenizer(num_words=None,
-                                   lower=True, split=' ', oov_token="UNK")
-        emb_layer = get_keras_embeddings_layer(args.glove, args.prepoc, tokenizer)
-
-
-
-
-
-
+                              lower=True, split=' ', oov_token="UNK")
+        emb_layer = get_keras_embeddings_layer(
+            args.glove, args.prepoc, tokenizer)
