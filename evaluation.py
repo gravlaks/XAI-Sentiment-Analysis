@@ -9,8 +9,8 @@ def evaluate_model(model, X_test, y_test):
 
 def plot_history(history):
     # The labels here assume we use accuracy for our model
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
 
     plt.title('Model accuracy')
     plt.ylabel('accuracy')

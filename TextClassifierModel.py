@@ -85,8 +85,7 @@ class KerasTextClassifier():
 
         seqs = np.array([list(x) for x in seqs])
 
-        # return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]), batch_size=batch_size, epochs=epochs, verbose=verbose)
-        return self.model.fit(seqs, y_train, validation_data=None, batch_size=batch_size, epochs=epochs, verbose=verbose)
+        return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]), batch_size=batch_size, epochs=epochs, verbose=verbose)
 
     def predict_proba(self, X, y=None):
 
