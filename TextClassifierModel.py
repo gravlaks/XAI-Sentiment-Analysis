@@ -80,10 +80,10 @@ class KerasTextClassifier():
         seqs = self._get_sequences(X_train)
         seqs_val = self._get_sequences(validation_data[0])
 
-        print(seqs[0])
-        print(type(seqs), type(seqs[0]))
+        # print(seqs[0])
+        # print(type(seqs), type(seqs[0]))
 
-        seqs = np.array([list(x) for x in seqs])
+        # seqs = np.array([list(x) for x in seqs])
 
         return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]), batch_size=batch_size, epochs=epochs, verbose=verbose)
 
