@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env python3
+# -*- coding: utf8 -*-
+
 """
 File name: model.py
 
@@ -18,7 +20,11 @@ from shutil import rmtree
 
 import numpy as np
 import tensorflow as tf
+from keras.preprocessing.text import Tokenizer
+from tensorflow import keras
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+from emb import get_keras_embedding_layer
 
 # Local Application Modules
 # -----------------------------------------------------------------------------------------
@@ -61,17 +67,23 @@ models = {
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, tokenizer, emb_layer, model_type='sequential', max_words=30000, input_length=100):
-        if tokenizer is not None and emb_layer is not None:
-            print("init")
-            self.input_length = input_length
-            self.model = self._get_model(model_type, emb_layer)
-            self.tokenizer = tokenizer
+    def __init__(self, max_words=30000, input_length=100):
+        EMB_MAX_WORDS = 5000
 
-    def _get_model(self, model_type, emb_layer):
+        self.tokenizer = Tokenizer(
+            num_words=EMB_MAX_WORDS, lower=False, split=' ', oov_token="UNK")
+
+        self.input_length = input_length
+
+    def init_model(self, emb_layer, model_type):
+        self.model = self.get_model(emb_layer, model_type)
+
+    def get_model(self, emb_layer, model_type):
         if model_type not in models:
-            print(model_type, 'is not a valid model type. Possible values are:', ', '.join(models.keys()))
+            print(model_type, 'is not a valid model type. Possible values are:',
+                  ', '.join(models.keys()))
         model = models[model_type](emb_layer)
+
         model.compile(optimizer="adam",
                       loss="binary_crossentropy",
                       metrics=["accuracy"])
@@ -82,97 +94,80 @@ class KerasTextClassifier():
         seqs = self.tokenizer.texts_to_sequences(texts)
         return pad_sequences(seqs, maxlen=self.input_length, value=0)
 
-    def fit(self, X, y, epochs, batch_size):
+    def fit(self, X_train, y_train, validation_data, epochs, batch_size, verbose):
         '''
         Fit the vocabulary and the model.
 
         :params:
-        X: list of texts.
+        X: list of list of words.
         y: labels.
         '''
 
-        seqs = self._get_sequences(X)
+        seqs = self._get_sequences(X_train)
+        seqs_val = self._get_sequences(validation_data[0])
 
-        return self.model.fit(seqs, y, batch_size=batch_size, epochs=epochs, validation_split=0.1)
+        return self.model.fit(seqs, y_train, validation_data=(seqs_val, validation_data[1]),
+                              batch_size=batch_size,
+                              epochs=epochs,
+                              verbose=verbose)
 
-    def predict_proba(self, X, y=None):
+    def predict_proba(self, X, y=None, verbose=False):
 
         seqs = self._get_sequences(X)
 
         return self.model.predict(seqs)
 
-    def predict(self, X, y=None):
-        return np.argmax(self.predict_proba(X), axis=1)
+    def evaluate(self, X, y=None, verbose=False):
+        seqs = self._get_sequences(X)
+        return self.model.evaluate(seqs, y, verbose=verbose)
 
     def save(self, directory, overwrite=False):
-        save_model_keras(self, directory, overwrite)
+        save_classifier(self, directory, overwrite)
 
 
-def build_model_keras(tokenizer, emb_layer, model_type='sequential'):
-    print("building model")
-    model = KerasTextClassifier(tokenizer, emb_layer, model_type=model_type)
+def create_classifier(glove_file, data, model_type):
 
-    return model
+    text_classifier = KerasTextClassifier()
 
+    tokenizer = text_classifier.tokenizer
+    emb_layer = get_keras_embedding_layer(glove_file, data['tweet'], tokenizer)
+    text_classifier.init_model(emb_layer, model_type)
+    model_path = './models/untrained'
 
-def save_model_keras(model, directory, overwrite=False):
-    if os.path.exists(directory):
-        if overwrite:
-            print('First, removing existing model')
-            rmtree(directory)
-        else:
-            raise TypeError('Directory exists!')
-
-    print('Saving model to', directory)
-    os.makedirs(directory, exist_ok=True)
-    config_path, tokenizer_path, model_path = get_model_paths(directory)
-
-    print('Creating config file', config_path)
-    with open(config_path, 'w') as out_file:
-        json.dump({'input_length': model.input_length}, out_file)
-
-    print('Creating tokenizer file', tokenizer_path)
-    with open(tokenizer_path, 'wb') as out_file:
-        pickle.dump(model.tokenizer, out_file, pickle.HIGHEST_PROTOCOL)
-
-    print('Creating keras model file', model_path)
-    model.model.save(model_path)
+    return text_classifier
 
 
-def load_model_keras(directory):
-    if not os.path.exists(directory):
-        raise TypeError('Directory does not exist!')
-    if not os.path.isdir(directory):
-        raise TypeError('Path exists but is not a directory!')
+def load_classifier(model_path):
 
-    config_path, tokenizer_path, model_path = get_model_paths(directory)
-    if not os.path.isfile(config_path):
-        raise TypeError('No config file!')
-    if not os.path.isfile(tokenizer_path):
-        raise TypeError('No tokenizer file!')
-    if not os.path.exists(model_path):
-        raise TypeError('No keras model!')
+    text_classifier_path = './classifiers/' + model_path.split("/")[-1] + ".pkl"
+    if not os.path.isfile(text_classifier_path):
+        raise Exception("No text classifier object, create new model first")
+    else:
+        with open(text_classifier_path, 'rb') as in_file:
+            text_classifier = pickle.load(in_file)
 
-    print('Loading model from', directory)
-    model = KerasTextClassifier(None, None)
+    text_classifier.model = tf.keras.models.load_model(model_path)
+    text_classifier.model.layers[0].trainable = False
 
-    print('Reading config file', config_path)
-    with open(config_path, 'r') as in_file:
-        model.input_length = json.load(in_file)['input_length']
-
-    print('Reading tokenizer file', tokenizer_path)
-    with open(tokenizer_path, 'rb') as in_file:
-        model.tokenizer = pickle.load(in_file)
-
-    print('Reading keras model file', model_path)
-    model.model = tf.keras.models.load_model(model_path)
-
-    return model
+    return text_classifier
 
 
-def get_model_paths(directory):
-    config_path = os.path.join(directory, 'config.json')
-    tokenizer_path = os.path.join(directory, 'tokenizer.pickle')
-    model_path = os.path.join(directory, 'keras-model')
+def save_classifier(text_classifier, model_path):
 
-    return config_path, tokenizer_path, model_path
+    # Cannot pickle tensorflow model, save it separately
+    tf.keras.models.save_model(text_classifier.model, model_path)
+
+    # Remove model from instance
+    model_cache = text_classifier.model
+    text_classifier.model = None
+
+    # Pickle instance
+    text_classifier_path = './classifiers/' + model_path.split("/")[-1] + ".pkl"
+    if not os.path.isdir('./classifiers'):
+        os.mkdir('./classifiers')
+    with open(text_classifier_path, 'wb') as out_file:
+        print(text_classifier_path)
+        pickle.dump(text_classifier, out_file, pickle.HIGHEST_PROTOCOL)
+
+    # Restore old model object on instance
+    text_classifier.model = model_cache
