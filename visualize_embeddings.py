@@ -23,20 +23,6 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 # -----------------------------------------------------------------------------------------
 from emb import get_embeddings_index
 
-def find_similar_words(glove_idx, word):
-    
-    word_vec = glove_idx[word]
-    
-    dists = np.array((len(glove_idx), ))
-
-    idx = 0
-    for word, vec in glove_idx.items():
-        if idx == 10:
-            break
-
-        dist = np.linalg.norm(vec-word_vec)
-        print(dist)
-        dists[idx] = dist
 
     
 
