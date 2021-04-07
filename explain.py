@@ -11,8 +11,9 @@ from eli5.lime import TextExplainer
 from keras.preprocessing.text import Tokenizer
 from sklearn.model_selection import train_test_split
 
+from evaluation import evaluate_model
 from parse import load_data
-from TextClassifierModel import create_classifier
+from TextClassifierModel import new_classifier
 
 
 # Based on https://xkcd.com/221/
@@ -36,14 +37,11 @@ def main(args):
     print('Creating tokenizer')
     tokenizer = Tokenizer(num_words=5000, lower=True,
                           split=' ', oov_token="UNK")
-    print('Creating model')
-    model = create_classifier(in_glove, data, model_type)
 
     print('Loading training data')
     data = load_data(in_file)
     X = data['tweet']
     y = data['target']
-    
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_SEED)
     X_train, X_val, y_train, y_val = train_test_split(
@@ -53,9 +51,21 @@ def main(args):
     y_test = tf.keras.utils.to_categorical(y_test, 2)
     y_val = tf.keras.utils.to_categorical(y_val, 2)
 
+    print('Creating model')
+    model = new_classifier(glove_file=in_glove,
+                           data=data,
+                           model_type=model_type)
+    for layer in model.model.layers:
+        if isinstance(layer, tf.keras.layers.Embedding):
+            layer.trainable = False
+
     print('Fitting model')
-    model.fit(X_train, y_train, validation_data=(
-        X_val, y_val), batch_size=60, epochs=30, verbose=1)
+    model.fit(X_train, y_train, validation_data=(X_val, y_val),
+              batch_size=60,
+              epochs=30,
+              verbose=1)
+
+    evaluate_model(model, X_test, y_test, verbose=False)
 
     print('Explaining')
     te = TextExplainer(random_state=42)
