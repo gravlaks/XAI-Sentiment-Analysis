@@ -121,8 +121,6 @@ class KerasTextClassifier():
         return self.model.evaluate(seqs, y, verbose=verbose)
 
 
-
-
 def new_classifier(glove_file, data, model_type):
 
     text_classifier = KerasTextClassifier()
@@ -134,10 +132,10 @@ def new_classifier(glove_file, data, model_type):
     return text_classifier
 
 
-def load_classifier(model_path):
+def load_classifier(model_path, model_type):
 
     text_classifier_path = ('./classifiers/'
-                            + model_path.split("/")[-1] + ".pkl")
+                            + model_path.split("/")[-1] + '_' + model_type + ".pkl")
     if not os.path.isfile(text_classifier_path):
         raise Exception("No text classifier object, create new model first")
     else:
@@ -152,7 +150,7 @@ def load_classifier(model_path):
     return text_classifier
 
 
-def save_classifier(text_classifier, model_path):
+def save_classifier(text_classifier, model_path, model_type):
 
     # Cannot pickle tensorflow model, save it separately
     tf.keras.models.save_model(text_classifier.model, model_path)
@@ -162,8 +160,8 @@ def save_classifier(text_classifier, model_path):
     text_classifier.model = None
 
     # Pickle instance
-    text_classifier_path = ('./classifiers/'
-                            + model_path.split("/")[-1] + ".pkl")
+    text_classifier_path = ('classifiers/'
+                            + model_path.split("/")[-1] + '_' + model_type + ".pkl")
     if not os.path.isdir('./classifiers'):
         os.mkdir('./classifiers')
     with open(text_classifier_path, 'wb') as out_file:
