@@ -25,6 +25,8 @@ RANDOM_SEED = 456
 NEW_MODEL = True
 # "sequential" | "recurrent"
 MODEL_TYPE = "recurrent"
+BATCH_SIZE = 200
+EPOCHS = 50
 SAVE_TRAINED_MODEL = True
 
 PREPROCESS_INPUT = './data/training.1600000.processed.noemoticon.csv'
@@ -65,7 +67,7 @@ print(text_classifier.model.summary())
 
 
 history = text_classifier.fit(X_train, y_train, validation_data=(
-    X_val, y_val), batch_size=60, epochs=30, verbose=1)
+    X_val, y_val), batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
 plot_history(history)
 
 
