@@ -19,10 +19,12 @@ from visualize_embeddings import display_pca_scatter_plot
 
 PREPROCESS = True  # Do a fresh preprocess
 MAKE_NEW_EMBEDDING = True  # If False, the stored one will be loaded
-# EMB_MAX_WORDS = None
+EMB_MAX_WORDS = 8888
 RANDOM_SEED = 456
 
 NEW_MODEL = True
+# "sequential" | "recurrent"
+MODEL_TYPE = "recurrent"
 SAVE_TRAINED_MODEL = True
 
 PREPROCESS_INPUT = './data/training.1600000.processed.noemoticon.csv'
@@ -30,6 +32,8 @@ PREPROCESS_OUTPUT = './data/preprocessed.csv'
 GLOVE_FILE = './data/glove.6B.50d.txt'
 EMB_PKL = './models/emb_layer.pkl'
 MODEL_PKL = './models/model.pkl'
+TRAINED_MODEL_PATH = 'models/trained'
+UNTRAINED_MODEL_PATH = 'models/untrained'
 
 
 if PREPROCESS:
@@ -51,16 +55,12 @@ y_val = tf.keras.utils.to_categorical(y_val, 2)
 
 # Create Empty model
 
-trained_model_path = 'models/trained'
-untrained_model_path = 'models/untrained'
-
 if NEW_MODEL:
-    model_type = "recurrent"
     text_classifier = new_classifier(
-        glove_file=GLOVE_FILE, data=data, model_type=model_type)
-    save_classifier(text_classifier, 'models/untrained')
+        glove_file=GLOVE_FILE, data=data, model_type=MODEL_TYPE)
+    save_classifier(text_classifier, TRAINED_MODEL_PATH)
 else:
-    text_classifier = load_classifier(model_path=untrained_model_path)
+    text_classifier = load_classifier(model_path=UNTRAINED_MODEL_PATH)
 print(text_classifier.model.summary())
 
 
@@ -69,7 +69,7 @@ history = text_classifier.fit(X_train, y_train, validation_data=(
 plot_history(history)
 
 
-save_classifier(text_classifier, 'models/trained')
+save_classifier(text_classifier, TRAINED_MODEL_PATH)
 
 
 evaluate_model(text_classifier, X_test, y_test, verbose=False)
