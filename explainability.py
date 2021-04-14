@@ -34,6 +34,11 @@ def display_html_browser(html, name='temp'):
     path = os.path.abspath("temp/"+name+'.html')
     url = 'file://' + path
 
+
+    # define the name of the directory to be created
+    if not os.path.exists("temp"):
+        os.mkdir("temp")
+
     with open(path, 'w') as f:
         f.write(html)
     webbrowser.open(url)
