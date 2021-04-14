@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
-
+#%%
 import pickle
 
 import eli5
@@ -12,10 +12,15 @@ from sklearn.model_selection import train_test_split
 
 from evaluation import evaluate_model, plot_history
 from parse import load_data
-from pre import preprocess
+from pre import preprocess, load_unprocessed, split_and_preprocess
+from explainability import explain_and_save, save_predictions, display_html_browser
+
 from TextClassifierModel import (load_classifier, new_classifier,
                                  save_classifier)
 from visualize_embeddings import display_pca_scatter_plot
+
+
+import codecs
 
 # TODO set to True
 PREPROCESS = False  # Do a fresh preprocess
@@ -36,6 +41,8 @@ GLOVE_FILE = './data/glove.6B.50d.txt'
 MODEL_PKL = './models/model.pkl'
 TRAINED_MODEL_PATH = 'models/trained_'+MODEL_TYPE
 UNTRAINED_MODEL_PATH = 'models/untrained_'+MODEL_TYPE
+TWEETS_TO_EXPLAIN = [111, 156, 933487, 933565]
+
 
 if PREPROCESS:
     preprocess(i=PREPROCESS_INPUT, o=PREPROCESS_OUTPUT)
@@ -76,9 +83,16 @@ else:
 evaluate_model(text_classifier, X_test, y_test, verbose=False)
 
 
-te = TextExplainer(random_state=42)
-te.fit("I love candy. I like to be positive, be happy! What a lovely day",
-       text_classifier.predict_proba)
-te.show_prediction()
 
+df_orig = load_unprocessed(PREPROCESS_INPUT)
+explain_tweets_orig, explain_tweets_prep = split_and_preprocess(df_orig, TWEETS_TO_EXPLAIN)
+explain_and_save(explain_tweets_orig, explain_tweets_prep, TWEETS_TO_EXPLAIN, text_classifier,  MODEL_TYPE)
+
+
+
+save_predictions(explain_tweets_prep, TWEETS_TO_EXPLAIN,  text_classifier)
+
+html=codecs.open(f"data/predictions/html_{TWEETS_TO_EXPLAIN[0]}.html", 'r').read()
+display_html_browser(html, 'explainability')
 display_pca_scatter_plot(GLOVE_FILE)
+
