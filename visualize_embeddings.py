@@ -50,7 +50,7 @@ def display_pca_scatter_plot(glove):
                 y = three_dim[i:i+5,1],
                 z = three_dim[i:i+5,2],
                 text = words[i:i+5],
-            name='random name',
+            name=f"Class {i//5+1}",
             textposition = "top center",
             textfont_size = 20,
             mode = 'markers+text',
@@ -88,6 +88,13 @@ def display_pca_scatter_plot(glove):
 
 
     plot_figure = go.Figure(data = data, layout = layout)
+    axes_range = [-5, 5]
+    plot_figure.update_layout(
+    scene = dict(
+        xaxis = dict(nticks=4, range=axes_range,),
+                     yaxis = dict(nticks=4, range=axes_range,),
+                     zaxis = dict(nticks=4, range=axes_range,),),
+    margin=dict(r=20, l=10, b=10, t=10))
     plot_figure.show(block=True)
 
 if __name__ == '__main__':
