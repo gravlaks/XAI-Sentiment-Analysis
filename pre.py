@@ -134,3 +134,26 @@ if __name__ == "__main__":
         print('No output location specified, performing a dry-run')
 
     preprocess(args.input, args.output, args.slice)
+
+
+def load_unprocessed(i):
+    df_orig = pd.read_csv(i, header=None)
+    df_orig = df_orig[[0, 5]]
+
+    df_orig.columns = ['target', 'tweet']
+    return df_orig
+
+def split_and_preprocess(df_orig, indices):
+
+    df_sliced = df_orig.loc[indices]
+    df_prep = df_sliced.copy()
+
+    #preprocess
+    with tqdm(total=len(indices)) as progress_bar:
+        df_prep['tweet'] = df_prep['tweet'].apply(
+            lambda tweet: preprocess_row(tweet, progress_bar))
+
+    explain_tweets_orig = df_sliced['tweet'].copy()
+
+    explain_tweets_prep = df_prep['tweet']
+    return explain_tweets_orig, explain_tweets_prep
