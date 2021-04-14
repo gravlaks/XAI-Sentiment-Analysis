@@ -87,11 +87,9 @@ def get_embedding_matrix(glove, tweets, tokenizer):
 # Keras embedding layer.
 
 
-def get_keras_embedding_layer(glove_file, tweets, tokenizer):
+def get_keras_embedding_layer(glove_file, tweets, tokenizer, sequence_length):
     emb_matrix = get_embedding_matrix(glove_file, tweets, tokenizer)
-
-    # TODO this is probably overkill, find average and max length in our vocab then set something shorter
-    MAX_SEQUENCE_LENGTH = 100
+    MAX_SEQUENCE_LENGTH = sequence_length
 
     emb_dim = len(emb_matrix[1])
     num_words = len(emb_matrix)
