@@ -22,20 +22,20 @@ PREPROCESS = False  # Do a fresh preprocess
 EMB_MAX_WORDS = 8888
 RANDOM_SEED = 456
 
-LOAD_TRAINED_MODEL = True
-NEW_MODEL = False
+LOAD_TRAINED_MODEL = False
+NEW_MODEL = True
 # "sequential" | "recurrent"
 MODEL_TYPE = "sequential"
 BATCH_SIZE = 64
-EPOCHS = 15
+EPOCHS = 1
 SAVE_TRAINED_MODEL = False
 
 PREPROCESS_INPUT = './data/training.1600000.processed.noemoticon.csv'
 PREPROCESS_OUTPUT = './data/preprocessed.csv'
 GLOVE_FILE = './data/glove.6B.50d.txt'
 MODEL_PKL = './models/model.pkl'
-TRAINED_MODEL_PATH = 'models/trained'
-UNTRAINED_MODEL_PATH = 'models/untrained'
+TRAINED_MODEL_PATH = 'models/trained_'+MODEL_TYPE
+UNTRAINED_MODEL_PATH = 'models/untrained_'+MODEL_TYPE
 
 if PREPROCESS:
     preprocess(i=PREPROCESS_INPUT, o=PREPROCESS_OUTPUT)
@@ -58,10 +58,10 @@ if not LOAD_TRAINED_MODEL:
     if NEW_MODEL:
         text_classifier = new_classifier(
             glove_file=GLOVE_FILE, data=data, model_type=MODEL_TYPE)
-        save_classifier(text_classifier, TRAINED_MODEL_PATH, MODEL_TYPE)
+        save_classifier(text_classifier, TRAINED_MODEL_PATH)
     else:
         text_classifier = load_classifier(
-            model_path=UNTRAINED_MODEL_PATH, model_type=MODEL_TYPE)
+            model_path=UNTRAINED_MODEL_PATH)
     print(text_classifier.model.summary())
 
     history = text_classifier.fit(X_train, y_train, validation_data=(
@@ -71,7 +71,7 @@ if not LOAD_TRAINED_MODEL:
         save_classifier(text_classifier, TRAINED_MODEL_PATH, MODEL_TYPE)
 else:
     text_classifier = load_classifier(
-        model_path=TRAINED_MODEL_PATH, model_type=MODEL_TYPE)
+        model_path=TRAINED_MODEL_PATH)
 
 evaluate_model(text_classifier, X_test, y_test, verbose=False)
 
