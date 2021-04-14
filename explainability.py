@@ -31,7 +31,7 @@ def get_html_single(tweet, text_classifier):
 
 def display_html_browser(html, name='temp'):
 
-    path = os.path.abspath(name+'.html')
+    path = os.path.abspath("temp/"+name+'.html')
     url = 'file://' + path
 
     with open(path, 'w') as f:
