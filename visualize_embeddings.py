@@ -4,7 +4,8 @@ File name: visualize_embeddings.py
 
 Creation Date: Wed 10 Mar 2021
 
-Description: Visualization of word embeddings with PCA. Code inspired by the site https://towardsdatascience.com/visualizing-word-embedding-with-pca-and-t-sne-961a692509f5
+Description: Visualizes embeddings by using PCA dimension reduction, heavily inspired by 
+https://towardsdatascience.com/visualizing-word-embedding-with-pca-and-t-sne-961a692509f5
 
 """
 
