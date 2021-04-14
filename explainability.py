@@ -1,5 +1,7 @@
 import eli5
 from eli5.lime import TextExplainer
+import os
+import webbrowser
 
 
 def explain_and_save(explain_tweets_orig, explain_tweets_prep, indices, text_classifier, model_type):
@@ -19,3 +21,27 @@ def explain_and_save(explain_tweets_orig, explain_tweets_prep, indices, text_cla
             for key, value in metrics.items():
                 f.write(f"{key}: {value}\n")
                 print(key, value)
+
+def get_html_single(tweet, text_classifier):
+    #Show prediction for single tweet:
+    te = TextExplainer(random_state=42)
+    te.fit(tweet, text_classifier.predict_proba)
+    html = te.show_prediction()._repr_html_()
+    return html
+
+def display_html_browser(html, name='temp'):
+
+    path = os.path.abspath(name+'.html')
+    url = 'file://' + path
+
+    with open(path, 'w') as f:
+        f.write(html)
+    webbrowser.open(url)
+
+def save_predictions(explain_tweets_prep, indices,  text_classifier):
+    for tweet_idx in indices:
+        path = f"data/predictions/html_{tweet_idx}.html"
+        tweet = explain_tweets_prep[tweet_idx]
+        html = get_html_single(tweet, text_classifier)
+        with open(path, 'w') as f:
+            f.write(html)
