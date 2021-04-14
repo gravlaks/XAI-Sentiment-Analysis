@@ -44,6 +44,9 @@ def display_html_browser(html, name='temp'):
     webbrowser.open(url)
 
 def save_predictions(explain_tweets_prep, indices,  text_classifier):
+
+    if not os.path.exists("data/predictions"):
+        os.mkdir("data/predictions")
     for tweet_idx in indices:
         path = f"data/predictions/html_{tweet_idx}.html"
         tweet = explain_tweets_prep[tweet_idx]
