@@ -36,9 +36,6 @@ def sequential_model(emb_layer):
         tf.keras.layers.Dropout(0.1),
         tf.keras.layers.Dense(256, activation='relu',
                               kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-        tf.keras.layers.Dense(128, activation='relu',
-                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
-        tf.keras.layers.Dense(64, activation='sigmoid'),
         tf.keras.layers.Dense(n_classes, activation='softmax')
     ])
 
@@ -46,7 +43,7 @@ def sequential_model(emb_layer):
 def lstm_model(emb_layer):
     inp = tf.keras.Input(shape=(None,), name="title")
     embedded = emb_layer(inp)
-    lstm = tf.keras.layers.LSTM(128)(embedded)
+    lstm = tf.keras.layers.LSTM(256)(embedded)
     flatten = tf.keras.layers.Flatten()(lstm)
     dense = tf.keras.layers.Dense(
         n_classes, activation='softmax')(flatten)
@@ -66,11 +63,10 @@ models = {
 class KerasTextClassifier():
     '''Wrapper class for keras text classification models that takes raw text as input.'''
 
-    def __init__(self, max_words=30000, input_length=100):
-        EMB_MAX_WORDS = 5000
+    def __init__(self, max_words=1000, input_length=50):
 
         self.tokenizer = Tokenizer(
-            num_words=EMB_MAX_WORDS, lower=False, split=' ', oov_token="UNK")
+            num_words=max_words, lower=False, split=' ', oov_token="UNK")
 
         self.input_length = input_length
 
@@ -79,14 +75,13 @@ class KerasTextClassifier():
 
     def get_model(self, emb_layer, model_type):
         if model_type not in models:
-            print(model_type, 'is not a valid model type. Possible values are:',
-                  ', '.join(models.keys()))
+            raise ValueError(str(
+                model_type) + 'is not a valid model type. Possible values are:' + ', '.join(models.keys()))
         model = models[model_type](emb_layer)
 
         model.compile(optimizer="adam",
                       loss="binary_crossentropy",
                       metrics=["accuracy"])
-        print(model.summary())
         return model
 
     def _get_sequences(self, texts):
@@ -121,12 +116,14 @@ class KerasTextClassifier():
         return self.model.evaluate(seqs, y, verbose=verbose)
 
 
-def new_classifier(glove_file, data, model_type):
+def new_classifier(glove_file, data, model_type, emb_max_words, emb_max_sequence_length):
 
-    text_classifier = KerasTextClassifier()
+    text_classifier = KerasTextClassifier(
+        emb_max_words, emb_max_sequence_length)
 
     tokenizer = text_classifier.tokenizer
-    emb_layer = get_keras_embedding_layer(glove_file, data['tweet'], tokenizer)
+    emb_layer = get_keras_embedding_layer(
+        glove_file, data['tweet'], tokenizer, emb_max_sequence_length)
     text_classifier.init_model(emb_layer, model_type)
 
     return text_classifier
@@ -135,7 +132,7 @@ def new_classifier(glove_file, data, model_type):
 def load_classifier(model_path):
 
     text_classifier_path = ('./classifiers/'
-                            + model_path.split("/")[-1]  + ".pkl")
+                            + model_path.split("/")[-1] + ".pkl")
     if not os.path.isfile(text_classifier_path):
         raise Exception("No text classifier object, create new model first")
     else:
@@ -161,7 +158,7 @@ def save_classifier(text_classifier, model_path):
 
     # Pickle instance
     text_classifier_path = ('classifiers/'
-                            + model_path.split("/")[-1]  + ".pkl")
+                            + model_path.split("/")[-1] + ".pkl")
     if not os.path.isdir('./classifiers'):
         os.mkdir('./classifiers')
     with open(text_classifier_path, 'wb') as out_file:

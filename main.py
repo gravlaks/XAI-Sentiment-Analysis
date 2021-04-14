@@ -20,15 +20,16 @@ from visualize_embeddings import display_pca_scatter_plot
 # TODO set to True
 PREPROCESS = False  # Do a fresh preprocess
 EMB_MAX_WORDS = 8888
+EMB_MAX_SEQUENCE_LENGTH = 30
 RANDOM_SEED = 456
 
 LOAD_TRAINED_MODEL = False
 NEW_MODEL = True
 # "sequential" | "recurrent"
-MODEL_TYPE = "sequential"
+MODEL_TYPE = "recurrent"
 BATCH_SIZE = 64
-EPOCHS = 1
-SAVE_TRAINED_MODEL = False
+EPOCHS = 10
+SAVE_TRAINED_MODEL = True
 
 PREPROCESS_INPUT = './data/training.1600000.processed.noemoticon.csv'
 PREPROCESS_OUTPUT = './data/preprocessed.csv'
@@ -57,7 +58,7 @@ if not LOAD_TRAINED_MODEL:
     # Create Empty model
     if NEW_MODEL:
         text_classifier = new_classifier(
-            glove_file=GLOVE_FILE, data=data, model_type=MODEL_TYPE)
+            glove_file=GLOVE_FILE, data=data, model_type=MODEL_TYPE, emb_max_words=EMB_MAX_WORDS, emb_max_sequence_length=EMB_MAX_SEQUENCE_LENGTH)
         save_classifier(text_classifier, TRAINED_MODEL_PATH)
     else:
         text_classifier = load_classifier(
@@ -68,7 +69,7 @@ if not LOAD_TRAINED_MODEL:
         X_val, y_val), batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     plot_history(history)
     if SAVE_TRAINED_MODEL:
-        save_classifier(text_classifier, TRAINED_MODEL_PATH, MODEL_TYPE)
+        save_classifier(text_classifier, TRAINED_MODEL_PATH)
 else:
     text_classifier = load_classifier(
         model_path=TRAINED_MODEL_PATH)
