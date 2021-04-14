@@ -1,18 +1,17 @@
-#!./venv/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
+import csv
 import os
 import re
+from json import dumps
 
+import nltk
 import pandas as pd
 from nltk import pos_tag, word_tokenize
 from nltk.corpus import stopwords, wordnet
 from nltk.stem import WordNetLemmatizer
 from tqdm import tqdm
-import csv
-from json import dumps
-
-import nltk
 
 
 def preprocess(i, o, slice=None):
