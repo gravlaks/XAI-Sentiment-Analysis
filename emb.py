@@ -18,9 +18,9 @@ Description: Embedding layer
 # -----------------------------------------------------------------------------
 import numpy as np
 import pandas as pd
-from keras.initializers import Constant
-from keras.layers import Embedding
-from keras.preprocessing.text import Tokenizer
+from tensorflow.keras.initializers import Constant
+from tensorflow.keras.layers import Embedding
+from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 # Local Application Modules
