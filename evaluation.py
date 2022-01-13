@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
 import matplotlib.pyplot as plt
+import os
 
 
 def evaluate_model(model, X_test, y_test, verbose=False):
@@ -19,8 +20,11 @@ def plot_history(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
     # plt.show()
-    plt.savefig('output/model accuracy.png')
+    filename = 'output/model_accuracy.png'
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    plt.savefig(filename)
 
+    plt.clf()  # clear figure
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
 
@@ -29,4 +33,4 @@ def plot_history(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
     # plt.show()
-    plt.savefig('output/model loss.png')
+    plt.savefig('output/model_loss.png')
